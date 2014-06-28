@@ -146,12 +146,18 @@ public class SinglePlayerActivity extends Activity implements MinesweeperObserve
         };
         Tile tile = game.getTile(row, col);
         Tile.TileState state = tile.getState();
+        tileButtons[row][col].setEnabled(true);
         tileButtons[row][col].setTextColor(Color.WHITE);
         if (state == Tile.TileState.Covered) {
             tileButtons[row][col].setText("");
         } else if (state == Tile.TileState.Number) {
-            tileButtons[row][col].setText(Integer.toString(tile.getNrSurroundingMines()));
-            tileButtons[row][col].setTextColor(colors[tile.getNrSurroundingMines()]);
+            tileButtons[row][col].setEnabled(false);
+            if (tile.getNrSurroundingMines() == 0) {
+                tileButtons[row][col].setText("");
+            } else {
+                tileButtons[row][col].setText(Integer.toString(tile.getNrSurroundingMines()));
+                tileButtons[row][col].setTextColor(colors[tile.getNrSurroundingMines()]);
+            }
         } else if (state == Tile.TileState.Flag) {
             tileButtons[row][col].setText("F");
         } else if (state == Tile.TileState.Unknown) {
@@ -159,8 +165,9 @@ public class SinglePlayerActivity extends Activity implements MinesweeperObserve
         } else if (state == Tile.TileState.Mine) {
             tileButtons[row][col].setText("X");
         } else if (state == Tile.TileState.BadFlag) {
-            tileButtons[row][col].setText("+");
+            tileButtons[row][col].setText("? :(");
         } else if (state == Tile.TileState.ExplodedMine) {
+            tileButtons[row][col].setEnabled(false);
             tileButtons[row][col].setText("*");
         }
     }

@@ -77,7 +77,7 @@ public class HomeActivity extends BaseGameActivity {
     }
 
     public void leaderboard(View view) {
-        startActivityForResult(Games.Leaderboards.getLeaderboardIntent(getApiClient(), "@string/leaderboard_singleplayer"), REQUEST_LEADERBOARD);
+        startActivityForResult(Games.Leaderboards.getLeaderboardIntent(getApiClient(), getString(R.string.leaderboard_singleplayer)), REQUEST_LEADERBOARD);
     }
 
     public void rules(View view) {

@@ -42,9 +42,6 @@
         <activity
             android:name=".MultiPlayerActivity"
             android:label="@string/title_activity_multi_player"></activity>
-        <activity
-            android:name=".LeaderboardActivity"
-            android:label="@string/title_activity_leaderboard"></activity>
 
     </application>
 
