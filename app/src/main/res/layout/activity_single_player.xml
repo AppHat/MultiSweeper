@@ -1,0 +1,76 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="gehle.multisweeper.SinglePlayerActivity">
+
+    <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:stretchColumns="0,2">
+
+        <TableRow>
+
+            <TextView
+                android:id="@+id/Timer"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_column="0"
+                android:gravity="center"
+                android:text="@string/timer"
+                android:textColor="#ff00d9ff"
+                android:textSize="35sp" />
+
+            <ImageButton
+                android:id="@+id/Smiley"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_column="1"
+                android:background="@drawable/smiley"
+                android:contentDescription="@string/smiley"
+                android:gravity="center"
+                android:onClick="resetGame"
+                android:padding="5dip"
+                android:scaleType="center" />
+
+            <TextView
+                android:id="@+id/MineCount"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_column="2"
+                android:gravity="center"
+                android:text="@string/timer"
+                android:textColor="#ff00d9ff"
+                android:textSize="35sp" />
+        </TableRow>
+
+        <TableRow>
+
+            <ScrollView
+                android:id="@+id/layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_span="3"
+                android:scrollbarStyle="outsideInset"
+                android:scrollbars="horizontal|vertical">
+
+                <HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                        android:id="@+id/MineField"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@color/game_board"></TableLayout>
+                </HorizontalScrollView>
+            </ScrollView>
+        </TableRow>
+    </TableLayout>
+
+</LinearLayout>
