@@ -93,8 +93,10 @@ public class Game {
 
         if (tile.getState() == Tile.TileState.Covered) {
             tile.setFlag();
+            mineCounter.dec();
         } else if (tile.getState() == Tile.TileState.Flag) {
             tile.setUnknown();
+            mineCounter.inc();
         } else {
             tile.setCovered();
         }
@@ -403,6 +405,10 @@ class MineCounter {
             mineCountText = strCounter;
         }
         observer.updateMineCounter();
+    }
+
+    public void inc(){
+        setMineCounter(mineCounter + 1);
     }
 
     public void dec() {
