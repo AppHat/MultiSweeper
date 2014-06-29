@@ -20,7 +20,6 @@ import static com.google.android.gms.common.GooglePlayServicesUtil.isGooglePlayS
 
 public class HomeActivity extends BaseGameActivity {
 
-    public final static String EXTRA_MESSAGE = "gehle.multisweeper.MESSAGE";
     private static final int REQUEST_LEADERBOARD = 0;
 
     @Override

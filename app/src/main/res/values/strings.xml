@@ -21,5 +21,8 @@
     <string name="timer">000</string>
     <string name="smiley">:)</string>
     <string name="title_activity_multi_player">MultiPlayerActivity</string>
+    <string name="gamestate_won">You have won! Score will be submitted!</string>
+    <string name="gamestate_lost">Game over! :(</string>
+    <string name="gamestate_button">OK</string>
 
 </resources>

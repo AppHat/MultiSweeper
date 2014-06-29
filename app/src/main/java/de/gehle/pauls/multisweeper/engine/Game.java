@@ -1,6 +1,7 @@
 package de.gehle.pauls.multisweeper.engine;
 
 import android.os.Handler;
+import android.util.Log;
 
 import java.util.Random;
 
@@ -25,7 +26,7 @@ public class Game {
         DIFFICULTY_HARD
     }
 
-    public class Difficulty {
+    public final class Difficulty {
         public int rows;
         public int cols;
         public int mines;
@@ -37,7 +38,7 @@ public class Game {
         }
     }
 
-    private Difficulty[] difficulties = {
+    private final Difficulty[] difficulties = {
             new Difficulty(10, 10, 10),
             new Difficulty(16, 16, 50),
             new Difficulty(30, 16, 144)
@@ -47,14 +48,15 @@ public class Game {
     private Timer timer;
     private MineCounter mineCounter;
     private GameBoard gameBoard;
-    MinesweeperObserver observer;
+    private MinesweeperObserver observer;
 
+    private int score = 0;
     private boolean started = false;
 
     public Game(MinesweeperObserver observer, DifficultyId difficulty) {
         this.observer = observer;
         this.difficulty = difficulties[difficulty.ordinal()];
-        gameState = GameState.GAMESTATE_PLAYING;
+        setGameState(GameState.GAMESTATE_PLAYING);
     }
 
     public void start() {
@@ -69,12 +71,12 @@ public class Game {
         init(row, col);
         Tile.TileState state = gameBoard.uncover(row, col);
         if (state == Tile.TileState.Mine) {
-            gameState = GameState.GAMESTATE_LOST;
             endGame();
+            setGameState(GameState.GAMESTATE_LOST);
         } else {
             if (checkWin()) {
-                gameState = GameState.GAMESTATE_WON;
                 endGame();
+                setGameState(GameState.GAMESTATE_WON);
             }
         }
     }
@@ -146,9 +148,33 @@ public class Game {
         return gameState;
     }
 
+    private void setGameState(GameState state) {
+        gameState = state;
+        //Calculate score
+        if (getGameState() == GameState.GAMESTATE_WON) {
+            int fieldsize = difficulty.rows * difficulty.cols;
+            int minedensity = (difficulty.mines / fieldsize) * 100;
+            if (minedensity < 10 || minedensity > 90) {
+                minedensity = 1;
+            }
+            int seconds = timer.getSecondsPassed() > 0 ? timer.getSecondsPassed() : 1;
+
+            Log.d("Score", "Fieldsize: " + fieldsize);
+            Log.d("Score", "Minedensity: " + minedensity);
+            Log.d("Score", "Timer: " + seconds);
+
+            score = ((int) Math.ceil(fieldsize / seconds)) * minedensity;
+        }
+        observer.onGameStateChanged(gameState);
+    }
+
     public void endGame() {
         timer.stop();
         gameBoard.uncoverAll();
+    }
+
+    public int getScore() {
+        return score;
     }
 
     public void reset() {
@@ -160,7 +186,7 @@ public class Game {
                 difficulty.cols,
                 difficulty.mines
         );
-        gameState = GameState.GAMESTATE_PLAYING;
+        setGameState(GameState.GAMESTATE_PLAYING);
         started = false;
     }
 }
@@ -361,12 +387,16 @@ class Timer {
     public void stop() {
         timer.removeCallbacks(updateTimer);
         timerStarted = false;
-        secondsPassed = 0;
     }
 
     public void reset() {
         currentTime = "000";
+        secondsPassed = 0;
         observer.updateTimer();
+    }
+
+    public int getSecondsPassed() {
+        return secondsPassed;
     }
 }
 
@@ -407,7 +437,7 @@ class MineCounter {
         observer.updateMineCounter();
     }
 
-    public void inc(){
+    public void inc() {
         setMineCounter(mineCounter + 1);
     }
 

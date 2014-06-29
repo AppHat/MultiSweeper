@@ -1,6 +1,6 @@
 package de.gehle.pauls.multisweeper;
 
-import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -14,11 +14,14 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
+import com.google.android.gms.games.Games;
+import com.google.example.games.basegameutils.BaseGameActivity;
+
 import de.gehle.pauls.multisweeper.engine.Game;
 import de.gehle.pauls.multisweeper.engine.MinesweeperObserver;
 import de.gehle.pauls.multisweeper.engine.Tile;
 
-public class SinglePlayerActivity extends Activity implements MinesweeperObserver {
+public class SinglePlayerActivity extends BaseGameActivity implements MinesweeperObserver {
 
     private final int tileWH = 32;
     private final int tilePadding = 2;
@@ -180,5 +183,33 @@ public class SinglePlayerActivity extends Activity implements MinesweeperObserve
     @Override
     public void updateMineCounter() {
         mineCountText.setText(game.getRemainingMines());
+    }
+
+    @Override
+    public void onGameStateChanged(Game.GameState newState) {
+        if (newState == Game.GameState.GAMESTATE_WON) {
+            new AlertDialog.Builder(this)
+                    // .setMessage(R.string.gamestate_won)
+                    .setMessage("You have won! You scored " + game.getScore() + " Points. Your Score will be submitted to the leaderboard.")
+                    .setNeutralButton(getString(R.string.gamestate_button), null)
+                    .show();
+            Games.Leaderboards.submitScore(getApiClient(), getString(R.string.leaderboard_singleplayer), game.getScore());
+            Log.d("Score", "Score saved");
+        } else if (newState == Game.GameState.GAMESTATE_LOST) {
+            new AlertDialog.Builder(this)
+                    .setMessage(R.string.gamestate_lost)
+                    .setNeutralButton(getString(R.string.gamestate_button), null)
+                    .show();
+        }
+    }
+
+    @Override
+    public void onSignInFailed() {
+
+    }
+
+    @Override
+    public void onSignInSucceeded() {
+
     }
 }

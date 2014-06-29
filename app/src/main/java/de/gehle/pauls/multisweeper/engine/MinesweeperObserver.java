@@ -10,4 +10,6 @@ public interface MinesweeperObserver {
     public void updateTimer();
 
     public void updateMineCounter();
+
+    public void onGameStateChanged(Game.GameState newState);
 }
