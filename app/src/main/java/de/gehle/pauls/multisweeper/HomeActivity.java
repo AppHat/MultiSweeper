@@ -75,6 +75,11 @@ public class HomeActivity extends BaseGameActivity {
     public void continueGame(View view) {
     }
 
+    public void multiplayer(View view) {
+        Intent intent = new Intent(this, MultiPlayerActivity.class);
+        startActivity(intent);
+    }
+
     public void leaderboard(View view) {
         startActivityForResult(Games.Leaderboards.getLeaderboardIntent(getApiClient(), getString(R.string.leaderboard_singleplayer)), REQUEST_LEADERBOARD);
     }

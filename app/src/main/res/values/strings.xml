@@ -24,5 +24,8 @@
     <string name="gamestate_won">You have won! Score will be submitted!</string>
     <string name="gamestate_lost">Game over! :(</string>
     <string name="gamestate_button">OK</string>
+    <string name="quickgame_button">Quick game</string>
+    <string name="invite_button">Invite player</string>
+    <string name="invatations_button">Show invitations</string>
 
 </resources>

@@ -21,13 +21,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="continueGame"
+        android:enabled="false"
         android:text="@string/continue_game" />
 
     <Button
         android:id="@+id/multiplayer_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:onClick="startGame"
+        android:onClick="multiplayer"
         android:text="@string/multiplayer_button" />
 
     <Button
