@@ -9,40 +9,50 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="de.gehle.pauls.multisweeper.SinglePlayerActivity">
 
-<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:stretchColumns="0,2">
+        android:stretchColumns="0,3">
 
         <TableRow>
 
             <TextView
-                android:id="@+id/Timer"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:id="@+id/TimerTitle"
+                android:layout_weight="1"
+                android:layout_width="0dp"
                 android:layout_column="0"
+                android:gravity="center"
+                android:text="@string/timer_title"
+                android:textColor="#ff00d9ff"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/Timer"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_column="1"
                 android:gravity="center"
                 android:text="@string/timer"
                 android:textColor="#ff00d9ff"
                 android:textSize="35sp" />
 
-            <ImageButton
-                android:id="@+id/Smiley"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_column="1"
-                android:background="@drawable/smiley"
-                android:contentDescription="@string/smiley"
+            <TextView
+                android:layout_weight="1"
+                android:id="@+id/MineCountTitle"
+                android:layout_width="0dp"
+                android:layout_column="2"
                 android:gravity="center"
-                android:onClick="resetGame"
-                android:padding="5dip"
-                android:scaleType="center" />
+                android:text="@string/minecounter_title"
+                android:textColor="#ff00d9ff"
+                android:textSize="20sp" />
 
             <TextView
+                android:layout_weight="1"
                 android:id="@+id/MineCount"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="48dp"
-                android:layout_column="2"
+                android:layout_column="3"
                 android:gravity="center"
                 android:text="@string/timer"
                 android:textColor="#ff00d9ff"
@@ -55,7 +65,7 @@
                 android:id="@+id/layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_span="3"
+                android:layout_span="4"
                 android:scrollbarStyle="outsideInset"
                 android:scrollbars="horizontal|vertical">
 

@@ -35,7 +35,7 @@ public class Tile {
     }
 
     public TileState openTile() {
-        if (shownState != TileState.Covered) {
+        if (shownState != TileState.Covered && shownState != TileState.Unknown) {
             return shownState;
         }
         if (realState == TileState.Mine) {
