@@ -4,6 +4,8 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
@@ -84,6 +86,9 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
         Tile.TileState state = tile.getState();
         tileButtons[row][col].setEnabled(true);
         tileButtons[row][col].setTextColor(Color.WHITE);
+        tileButtons[row][col].setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+        tileButtons[row][col].setPadding(0, 0, 0, 0);
+        tileButtons[row][col].setTypeface(null, Typeface.NORMAL);
         if (state == Tile.TileState.Covered) {
             tileButtons[row][col].setText("");
         } else if (state == Tile.TileState.Number) {
@@ -95,18 +100,46 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
                 tileButtons[row][col].setTextColor(colors[tile.getNrSurroundingMines()]);
             }
         } else if (state == Tile.TileState.Flag) {
-            tileButtons[row][col].setText("F");
+            Drawable image = getResources().getDrawable(R.drawable.flag_player1);
+            image.setBounds(0, 0, 45, 45);
+            tileButtons[row][col].setPadding(8, 0, 0, 0);
+            tileButtons[row][col].setCompoundDrawables(image, null, null, null);
+
         } else if (state == Tile.TileState.Unknown) {
             tileButtons[row][col].setText("?");
+            tileButtons[row][col].setTextColor(Color.parseColor("#00d9ff"));
+            tileButtons[row][col].setTypeface(null, Typeface.BOLD);
+
         } else if (state == Tile.TileState.Mine) {
             tileButtons[row][col].setEnabled(false);
-            tileButtons[row][col].setText("X");
+            tileButtons[row][col].setText("");
+            Drawable image = getResources().getDrawable(R.drawable.mine);
+            image.setBounds(0, 0, 45, 45);
+            tileButtons[row][col].setPadding(8, 0, 0, 0);
+            tileButtons[row][col].setCompoundDrawables(image, null, null, null);
+
         } else if (state == Tile.TileState.BadFlag) {
             tileButtons[row][col].setEnabled(false);
-            tileButtons[row][col].setText("? :(");
+            if (tile.getNrSurroundingMines() == 0) {
+                tileButtons[row][col].setText("");
+            } else {
+                tileButtons[row][col].setText(Integer.toString(tile.getNrSurroundingMines()));
+                tileButtons[row][col].setTextColor(colors[tile.getNrSurroundingMines()]);
+            }
+            Drawable image = getResources().getDrawable(R.drawable.badflag_player1);
+            image.setBounds(0, 0, 45, 45);
+            tileButtons[row][col].setPadding(8, 0, 0, 0);
+            tileButtons[row][col].setCompoundDrawables(image, null, null, null);
+            tileButtons[row][col].setCompoundDrawablePadding(-53);
+            tileButtons[row][col].setTextColor(Color.parseColor("#e9e9e9"));
+
         } else if (state == Tile.TileState.ExplodedMine) {
             tileButtons[row][col].setEnabled(false);
-            tileButtons[row][col].setText("*");
+            tileButtons[row][col].setText("");
+            Drawable image = getResources().getDrawable(R.drawable.mine_exploded);
+            image.setBounds(0, 0, 45, 45);
+            tileButtons[row][col].setPadding(8, 0, 0, 0);
+            tileButtons[row][col].setCompoundDrawables(image, null, null, null);
         }
     }
 
