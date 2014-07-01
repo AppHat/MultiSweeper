@@ -163,7 +163,7 @@ public class Game {
             Log.d("Score", "Minedensity: " + minedensity);
             Log.d("Score", "Timer: " + seconds);
 
-            score = ((int) Math.ceil((fieldsize / seconds) * 100)) * minedensity;
+            score = (fieldsize * 100 / seconds) * minedensity;
         }
         observer.onGameStateChanged(gameState);
     }
