@@ -1,10 +1,12 @@
 package de.gehle.pauls.multisweeper;
 
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -22,7 +24,7 @@ import de.gehle.pauls.multisweeper.engine.Tile;
 /**
  * Created by Andi on 30.06.2014.
  */
-public class GameActivity extends BaseGameActivity implements MinesweeperObserver {
+public abstract class GameActivity extends BaseGameActivity implements MinesweeperObserver {
 
     private final int tileWH = 32;
     private final int tilePadding = 2;
@@ -120,19 +122,36 @@ public class GameActivity extends BaseGameActivity implements MinesweeperObserve
 
     @Override
     public void onGameStateChanged(Game.GameState newState) {
-        if (newState == Game.GameState.GAMESTATE_WON) {
-            new AlertDialog.Builder(this)
-                    // .setMessage(R.string.gamestate_won)
-                    .setMessage("You have won! You scored " + game.getScore() + " Points. Your Score will be submitted to the leaderboard.")
-                    .setNeutralButton(getString(R.string.gamestate_button), null)
-                    .show();
-            Games.Leaderboards.submitScore(getApiClient(), getString(R.string.leaderboard_singleplayer), game.getScore());
-            Log.d("Score", "Score saved");
-        } else if (newState == Game.GameState.GAMESTATE_LOST) {
-            new AlertDialog.Builder(this)
-                    .setMessage(R.string.gamestate_lost)
-                    .setNeutralButton(getString(R.string.gamestate_button), null)
-                    .show();
+        if (newState == Game.GameState.GAMESTATE_WON || newState == Game.GameState.GAMESTATE_LOST) {
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            int score = game.getScore();
+
+            if (newState == Game.GameState.GAMESTATE_WON) {
+                dialogBuilder.setTitle(R.string.gamestate_won);
+                Games.Leaderboards.submitScore(getApiClient(), getString(R.string.leaderboard_singleplayer), score);
+                Log.d("Score", "Score saved");
+            } else if (newState == Game.GameState.GAMESTATE_LOST) {
+                dialogBuilder.setTitle(R.string.gamestate_lost);
+            }
+
+            AlertDialog dialog = dialogBuilder.setMessage("Score: " + score + " Points")
+                    .setPositiveButton(R.string.new_game, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int id) {
+                            resetGame(null);
+                        }
+                    })
+                    .setNegativeButton(R.string.back, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int id) {
+                            //Stop the activity
+                            GameActivity.this.finish();
+                        }
+                    })
+                    .create();
+            dialog.show();
+            TextView messageText = (TextView) dialog.findViewById(android.R.id.message);
+            messageText.setGravity(Gravity.CENTER);
         }
     }
 
