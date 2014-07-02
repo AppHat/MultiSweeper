@@ -246,6 +246,7 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
 
     public void resetGame(View view) {
         game.reset();
+        game.start();
         showGameState();
     }
 }

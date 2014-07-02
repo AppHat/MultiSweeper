@@ -1,6 +1,8 @@
 package de.gehle.pauls.multisweeper.engine;
 
 import android.os.Handler;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 
 import java.util.Random;
@@ -39,9 +41,9 @@ public class Game {
     }
 
     private final Difficulty[] difficulties = {
-            new Difficulty(10, 10, 10),
-            new Difficulty(16, 16, 50),
-            new Difficulty(30, 16, 144)
+            new Difficulty(10, 10, 22),
+            new Difficulty(16, 16, 56),
+            new Difficulty(30, 16, 105)
     };
     private Difficulty difficulty;
 
@@ -56,12 +58,13 @@ public class Game {
     public Game(MinesweeperObserver observer, DifficultyId difficulty) {
         this.observer = observer;
         this.difficulty = difficulties[difficulty.ordinal()];
+        timer = new Timer(observer);
+        mineCounter = new MineCounter(observer, this.difficulty.mines);
         setGameState(GameState.GAMESTATE_PLAYING);
     }
 
     public void start() {
-        timer = new Timer(observer);
-        mineCounter = new MineCounter(observer, difficulty.mines);
+        score = 0;
         mineCounter.setMineCounter(difficulty.mines);
         gameBoard = new GameBoard(observer);
         gameBoard.setupMineField(difficulty.rows, difficulty.cols, difficulty.mines);
@@ -73,11 +76,9 @@ public class Game {
         if (state == Tile.TileState.Mine) {
             endGame();
             setGameState(GameState.GAMESTATE_LOST);
-        } else {
-            if (checkWin()) {
-                endGame();
-                setGameState(GameState.GAMESTATE_WON);
-            }
+        } else if (checkWin()){
+            endGame();
+            setGameState(GameState.GAMESTATE_WON);
         }
     }
 
@@ -121,10 +122,6 @@ public class Game {
 
     public int getCols() {
         return difficulty.cols;
-    }
-
-    public int getTotalMines() {
-        return difficulty.mines;
     }
 
     public Tile getTile(int row, int col) {
@@ -189,6 +186,7 @@ public class Game {
         setGameState(GameState.GAMESTATE_PLAYING);
         started = false;
     }
+
 }
 
 /**
