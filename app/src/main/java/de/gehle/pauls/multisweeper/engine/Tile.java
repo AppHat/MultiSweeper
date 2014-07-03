@@ -39,6 +39,14 @@ public class Tile {
         numberUncovered = false;
     }
 
+    public int getRow() {
+        return row;
+    }
+
+    public int getCol() {
+        return col;
+    }
+
     public TileState openTile() {
         if (shownState != TileState.COVERED && shownState != TileState.UNKNOWN) {
             return shownState;
@@ -65,6 +73,10 @@ public class Tile {
 
     public void updateSurroundingMineCount() {
         ++nrSurroundingMines;
+    }
+
+    public void setNrSurroundingMines(int value) {
+        nrSurroundingMines = value;
     }
 
     public int getNrSurroundingMines() {
@@ -128,6 +140,33 @@ public class Tile {
 
     public boolean isMine() {
         return realState == TileState.MINE;
+    }
+
+    public static byte[] serialize(Tile obj) {
+        byte[] output = new byte[4];
+
+        output[0] = (byte) obj.row;
+        output[1] = (byte) obj.col;
+        output[2] = (byte) obj.nrSurroundingMines;
+        output[3] = (byte) (obj.isMine() ? 1 : 0);
+        return output;
+    }
+
+    public static Tile deserialize(byte[] data, MinesweeperObserver observer) {
+        int row = (int) data[0];
+        int col = (int) data[1];
+        int nrSurroundingMines = (int) data[2];
+        boolean isMine = (int) data[3] == 1;
+
+
+        Tile tile = new Tile(observer, row, col);
+        tile.setNrSurroundingMines(nrSurroundingMines);
+
+        if (isMine) {
+            tile.putMine();
+        }
+
+        return tile;
     }
 
 }

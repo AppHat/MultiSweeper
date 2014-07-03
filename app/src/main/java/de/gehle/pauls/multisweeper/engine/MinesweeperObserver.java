@@ -12,4 +12,6 @@ public interface MinesweeperObserver {
     public void updateMineCounter();
 
     public void onGameStateChanged(Game.GameState newState);
+
+    public void onInitGameBoard(Tile[][] tiles);
 }

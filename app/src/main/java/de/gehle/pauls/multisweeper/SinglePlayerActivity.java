@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import de.gehle.pauls.multisweeper.engine.Tile;
+
 public class SinglePlayerActivity extends GameActivity {
 
     @Override
@@ -39,6 +41,11 @@ public class SinglePlayerActivity extends GameActivity {
 
     @Override
     public void onSignInSucceeded() {
+
+    }
+
+    @Override
+    public void onInitGameBoard(Tile[][] tiles) {
 
     }
 }

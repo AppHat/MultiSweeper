@@ -75,7 +75,7 @@ public class Game {
         if (checkLose()) {
             endGame();
             setGameState(GameState.GAMESTATE_LOST);
-        } else if (checkWin()){
+        } else if (checkWin()) {
             endGame();
             setGameState(GameState.GAMESTATE_WON);
         }
@@ -97,10 +97,16 @@ public class Game {
         if (!started) {
             started = true;
             gameBoard.setupTiles(row, col);
+            observer.onInitGameBoard(gameBoard.getTiles());
         }
         if (!timer.hasStarted()) {
             timer.start();
         }
+    }
+
+    public void forward(Tile[][] tiles) {
+        gameBoard.setTiles(tiles);
+        started = true;
     }
 
     public int getRows() {
@@ -347,6 +353,14 @@ class GameBoard {
 
     public Tile getTile(int row, int col) {
         return tiles[row][col];
+    }
+
+    public Tile[][] getTiles() {
+        return tiles;
+    }
+
+    public void setTiles(Tile[][] tiles) {
+        this.tiles = tiles;
     }
 
     public boolean hitMine() { return hitMine; }

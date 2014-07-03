@@ -26,6 +26,8 @@ import com.google.android.gms.games.multiplayer.realtime.RoomUpdateListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.gehle.pauls.multisweeper.engine.Tile;
+
 public class MultiPlayerActivity extends GameActivity implements OnInvitationReceivedListener, RoomUpdateListener, RealTimeMessageReceivedListener, RoomStatusUpdateListener {
 
     private static final String TAG = "Multiplayer";
@@ -378,6 +380,7 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
      * [C][3][1] = Participant clicked on field (3,1) with 3,1 as array indices, so min would be 0 and max length -1
      * [L][3][1] = Participant long clicked field (3,1) with 3,1 as array indices, so min would be 0 and max length -1 (Game engine handels if question-mark, flag or removed marks)
      * [S] = Starting game (E.g. Creator of the room has clicked on play in the waiting room, so we should also switch to game screen and leave the waiting room)
+     * [B] [Tile1Data1][Tile1Data2][Tile1Data3][Tile1Data4] [Tile2Data1][Tile2Data2].... = Board-sync
      *
      * @param realTimeMessage
      */
@@ -387,19 +390,36 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
         String sender = realTimeMessage.getSenderParticipantId();
         Log.d(TAG, "Message received: " + (char) buf[0] + "/" + (int) buf[1]);
 
-        if ((char) buf[0] == 'S') {
+        char action = (char) buf[0];
+
+        if (action == 'S') {
             Log.d(TAG, "Received startGame");
             mWaitingRoomFinishedFromCode = true;
             finishActivity(RC_WAITING_ROOM);
             startGame();
+        } else if (action == 'B') {
+            Tile[][] tiles = new Tile[game.getRows()][game.getCols()];
+
+            for (int i = 1; i < buf.length; i += 4) {
+                byte[] data = new byte[4];
+                data[0] = buf[i];
+                data[1] = buf[i + 1];
+                data[2] = buf[i + 2];
+                data[3] = buf[i + 3];
+                Tile newTile = Tile.deserialize(data, this);
+                tiles[newTile.getRow()][newTile.getCol()] = newTile;
+            }
+
+            game.forward(tiles);
+
         } else {
             int row = (int) buf[1];
             int col = (int) buf[2];
 
-            if (buf[0] == 'C') {
+            if (action == 'C') {
                 Log.d(TAG, "Received onClick");
                 game.playerMove(row, col);
-            } else if (buf[0] == 'L') {
+            } else if (action == 'L') {
                 Log.d(TAG, "Received onLongClick");
                 game.playerMoveAlt(row, col);
             }
@@ -530,5 +550,30 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
         if (mParticipants != null) {
             updatePeerScoresDisplay();
         }*/
+    }
+
+    @Override
+    public void onInitGameBoard(Tile[][] tiles) {
+        byte[] message = new byte[tiles.length * 4 + 1];
+        message[0] = 'B';
+
+        int i = 1;
+        for (int row = 0; row < tiles.length; row++) {
+            for (int col = 0; col < tiles[row].length; col++) {
+                byte[] data = Tile.serialize(tiles[row][col]);
+                message[i] = data[0];
+                message[i + 1] = data[1];
+                message[i + 2] = data[2];
+                message[i + 3] = data[3];
+                i += 4;
+            }
+        }
+
+        for (Participant p : mParticipants) {
+            if (!p.getParticipantId().equals(mMyId)) {
+                Games.RealTimeMultiplayer.sendReliableMessage(getApiClient(), null, message, mRoomId, p.getParticipantId());
+            }
+        }
+        Log.d(TAG, "Sending board sync");
     }
 }
