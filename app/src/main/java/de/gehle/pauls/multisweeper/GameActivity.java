@@ -31,17 +31,17 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
     private final int tileWH = 32;
     private final int tilePadding = 2;
 
-    private Game game;
+    protected Game game;
     private TableLayout mineField;
     private TextView timerText;
     private TextView mineCountText;
     private ImageButton imageButton;
-    private Button[][] tileButtons;
+    protected Button[][] tileButtons;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_single_player);
+        setContentView(R.layout.game);
 
         mineField = (TableLayout) findViewById(R.id.MineField);
         timerText = (TextView) findViewById(R.id.Timer);
@@ -59,6 +59,9 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
             // TODO error handling
         }
         game = new Game(this, Game.DifficultyId.values()[difficulty]);
+    }
+
+    protected void startGame() {
         game.start();
         Log.d("Multisweeper", "Game started");
         initButtons();
@@ -188,7 +191,7 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
         }
     }
 
-    private void initButtons() {
+    protected void initButtons() {
         tileButtons = new Button[game.getRows()][game.getCols()];
         for (int i = 0; i < game.getRows(); ++i) {
             TableRow tableRow = new TableRow(this);

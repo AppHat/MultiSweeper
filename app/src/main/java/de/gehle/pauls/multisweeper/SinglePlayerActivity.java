@@ -9,6 +9,7 @@ public class SinglePlayerActivity extends GameActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        startGame();
     }
 
     @Override

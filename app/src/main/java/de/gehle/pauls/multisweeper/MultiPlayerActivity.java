@@ -28,24 +28,27 @@ import java.util.List;
 
 public class MultiPlayerActivity extends GameActivity implements OnInvitationReceivedListener, RoomUpdateListener, RealTimeMessageReceivedListener, RoomStatusUpdateListener {
 
-    /**
-     * Request code for the "select players" UI
-     * can be any number as long as it's unique
-     */
-    final static int RC_SELECT_PLAYERS = 10000;
+    private static final String TAG = "Multiplayer";
 
     /**
-     * Arbitrary request code for the waiting room UI.
-     * This can be any integer that's unique in your Activity.
+     * Arbitrary request codes for the default UIs like waiting-room or invitation-box.
+     * This can be any integer that's unique in our Activity.
      */
+    final static int RC_SELECT_PLAYERS = 10000;
+    final static int RC_INVITATION_INBOX = 10001;
     final static int RC_WAITING_ROOM = 10002;
 
     final static int MIN_OTHER_PLAYERS = 1;
     final static int MAX_OTHER_PLAYERS = 2;
 
     private String mRoomId;
+    private boolean mWaitingRoomFinishedFromCode = false;
+    private String mIncomingInvitationId;
 
-    private static final String TAG = "Multiplayer";
+    private boolean mPlaying = false;
+    // The participants in the currently active game
+    ArrayList<Participant> mParticipants = null;
+    private String mMyId = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,8 +77,6 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
     }
 
     public void startQuickGame(View view) {
-        // auto-match criteria to invite one random automatch opponent.
-        // You can also specify more opponents (up to 3).
         Bundle am = RoomConfig.createAutoMatchCriteria(MIN_OTHER_PLAYERS, MAX_OTHER_PLAYERS, 0);
 
         // build the room config:
@@ -90,13 +91,87 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         // go to game screen
+        startGame();
     }
 
     public void invitePlayer(View view) {
-        // launch the player selection screen
-        // minimum: 1 other player; maximum: 3 other players
         Intent intent = Games.RealTimeMultiplayer.getSelectOpponentsIntent(getApiClient(), MIN_OTHER_PLAYERS, MAX_OTHER_PLAYERS);
         startActivityForResult(intent, RC_SELECT_PLAYERS);
+    }
+
+    public void invitationBox(View view) {
+        // launch the intent to show the invitation inbox screen
+        Intent intent = Games.Invitations.getInvitationInboxIntent(getApiClient());
+        startActivityForResult(intent, RC_INVITATION_INBOX);
+    }
+
+    @Override
+    protected void startGame() {
+        super.startGame();
+        mPlaying = true;
+    }
+
+    @Override
+    protected void initButtons() {
+        super.initButtons();
+        for (int i = 0; i < game.getRows(); ++i) {
+            for (int j = 0; j < game.getCols(); ++j) {
+
+                final int curRow = i;
+                final int curCol = j;
+
+                tileButtons[i][j].setOnClickListener(
+                        new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                game.playerMove(curRow, curCol);
+                                sendOnClick(curRow, curCol);
+                            }
+                        }
+                );
+                tileButtons[i][j].setOnLongClickListener(
+                        new View.OnLongClickListener() {
+                            @Override
+                            public boolean onLongClick(View view) {
+                                game.playerMoveAlt(curRow, curCol);
+                                sendLongClick(curRow, curCol);
+                                return true;
+                            }
+                        }
+                );
+            }
+        }
+    }
+
+    private void sendOnClick(int row, int col) {
+        byte[] message = new byte[3];
+
+        message[0] = 'C';
+        message[1] = (byte) row;
+        message[2] = (byte) col;
+
+        for (Participant p : mParticipants) {
+            if (!p.getParticipantId().equals(mMyId)) {
+                Games.RealTimeMultiplayer.sendReliableMessage(getApiClient(), null, message, mRoomId, p.getParticipantId());
+            }
+        }
+        Log.d(TAG, "Sending onClick with " + row + "," + col);
+    }
+
+    private void sendLongClick(int row, int col) {
+        byte[] message = new byte[3];
+
+        message[0] = 'L';
+        message[1] = (byte) row;
+        message[2] = (byte) col;
+
+        for (Participant p : mParticipants) {
+            if (!p.getParticipantId().equals(mMyId)) {
+                Games.RealTimeMultiplayer.sendReliableMessage(getApiClient(), null, message, mRoomId, p.getParticipantId());
+            }
+        }
+
+        Log.d(TAG, "Sending onLongClick with " + row + "," + col);
     }
 
     @Override
@@ -114,16 +189,27 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
 
         // if we received an invite via notification, accept it; otherwise, go to main screen
         if (getInvitationId() != null) {
-            //acceptInviteToRoom(getInvitationId());
-            return;
+            RoomConfig.Builder roomConfigBuilder = makeBasicRoomConfigBuilder();
+            roomConfigBuilder.setInvitationIdToAccept(getInvitationId());
+            Games.RealTimeMultiplayer.join(getApiClient(), roomConfigBuilder.build());
+
+            // prevent screen from sleeping during handshake
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+            // go to game screen
+            startGame();
         }
     }
 
     @Override
     public void onActivityResult(int request, int response, Intent data) {
         if (request == RC_WAITING_ROOM) {
+            // ignore response code if the waiting room was dismissed from code:
+            if (mWaitingRoomFinishedFromCode) return;
+
             if (response == Activity.RESULT_OK) {
                 // (start game)
+                startGame();
             } else if (response == Activity.RESULT_CANCELED) {
                 // Waiting room was dismissed with the back button. The meaning of this
                 // action is up to the game. You may choose to leave the room and cancel the
@@ -151,15 +237,11 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
 
             // get auto-match criteria
             Bundle autoMatchCriteria = null;
-            int minAutoMatchPlayers =
-                    data.getIntExtra(Multiplayer.EXTRA_MIN_AUTOMATCH_PLAYERS, 0);
-            int maxAutoMatchPlayers =
-                    data.getIntExtra(Multiplayer.EXTRA_MAX_AUTOMATCH_PLAYERS, 0);
+            int minAutoMatchPlayers = data.getIntExtra(Multiplayer.EXTRA_MIN_AUTOMATCH_PLAYERS, 0);
+            int maxAutoMatchPlayers = data.getIntExtra(Multiplayer.EXTRA_MAX_AUTOMATCH_PLAYERS, 0);
 
             if (minAutoMatchPlayers > 0) {
-                autoMatchCriteria =
-                        RoomConfig.createAutoMatchCriteria(
-                                minAutoMatchPlayers, maxAutoMatchPlayers, 0);
+                autoMatchCriteria = RoomConfig.createAutoMatchCriteria(minAutoMatchPlayers, maxAutoMatchPlayers, 0);
             } else {
                 autoMatchCriteria = null;
             }
@@ -175,6 +257,27 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
 
             // prevent screen from sleeping during handshake
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        } else if (request == RC_INVITATION_INBOX) {
+            if (response != Activity.RESULT_OK) {
+                // canceled
+                return;
+            }
+
+            // get the selected invitation
+            Bundle extras = data.getExtras();
+            Invitation invitation = extras.getParcelable(Multiplayer.EXTRA_INVITATION);
+
+            // accept it!
+            RoomConfig roomConfig = makeBasicRoomConfigBuilder()
+                    .setInvitationIdToAccept(invitation.getInvitationId())
+                    .build();
+            Games.RealTimeMultiplayer.join(getApiClient(), roomConfig);
+
+            // prevent screen from sleeping during handshake
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+            // go to game screen
+            startGame();
         }
     }
 
@@ -189,7 +292,22 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
 
     @Override
     public void onInvitationReceived(Invitation invitation) {
+        // show in-game popup to let user know of pending invitation
 
+        // store invitation for use when player accepts this invitation
+        mIncomingInvitationId = invitation.getInvitationId();
+
+        /**
+         * If accept popup accept invatation:
+         * RoomConfig.Builder roomConfigBuilder = makeBasicRoomConfigBuilder();
+         roomConfigBuilder.setInvitationIdToAccept(mIncomingInvitationId);
+         Games.RealTimeMultiplayer.join(getApiClient(), roomConfigBuilder.build());
+
+         // prevent screen from sleeping during handshake
+         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+         // now, go to game screen
+         */
     }
 
     @Override
@@ -247,24 +365,47 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
             // show error message, return to main screen.
         }
 
-        mRoomId = room.getRoomId();
+        updateRoom(room);
     }
 
     //=================================================
 
+    /**
+     * Received messages
+     * <p/>
+     * Bytes received ([Byte1][Byte2]...[ByteN]) = Meaning
+     * [C][3][1] = Participant clicked on field (3,1) with 3,1 as array indices, so min would be 0 and max length -1
+     * [L][3][1] = Participant long clicked field (3,1) with 3,1 as array indices, so min would be 0 and max length -1 (Game engine handels if question-mark, flag or removed marks)
+     * [S] = Starting game (E.g. Creator of the room has clicked on play in the waiting room, so we should also switch to game screen and leave the waiting room)
+     *
+     * @param realTimeMessage
+     */
     @Override
     public void onRealTimeMessageReceived(RealTimeMessage realTimeMessage) {
+        byte[] buf = realTimeMessage.getMessageData();
+        String sender = realTimeMessage.getSenderParticipantId();
+        Log.d(TAG, "Message received: " + (char) buf[0] + "/" + (int) buf[1]);
 
+        if ((char) buf[0] == 'S') {
+            Log.d(TAG, "Received startGame");
+            mWaitingRoomFinishedFromCode = true;
+            finishActivity(RC_WAITING_ROOM);
+            startGame();
+        } else {
+            int row = (int) buf[1];
+            int col = (int) buf[2];
+
+            if (buf[0] == 'C') {
+                Log.d(TAG, "Received onClick");
+                game.playerMove(row, col);
+            } else if (buf[0] == 'L') {
+                Log.d(TAG, "Received onLongClick");
+                game.playerMoveAlt(row, col);
+            }
+        }
     }
 
     //=================================================
-
-
-    // are we already playing?
-    boolean mPlaying = false;
-
-    // at least 2 players required for our game
-    final static int MIN_PLAYERS = 2;
 
     // returns whether there are enough players to start the game
     private boolean shouldStartGame(Room room) {
@@ -272,7 +413,7 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
         for (Participant p : room.getParticipants()) {
             if (p.isConnectedToRoom()) ++connectedPlayers;
         }
-        return connectedPlayers >= MIN_PLAYERS;
+        return connectedPlayers >= MIN_OTHER_PLAYERS + 1;
     }
 
     // Returns whether the room is in a state where the game should be canceled.
@@ -286,17 +427,17 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
 
     @Override
     public void onRoomConnecting(Room room) {
-
+        updateRoom(room);
     }
 
     @Override
     public void onRoomAutoMatching(Room room) {
-
+        updateRoom(room);
     }
 
     @Override
     public void onPeerInvitedToRoom(Room room, List<String> strings) {
-
+        updateRoom(room);
     }
 
     @Override
@@ -306,11 +447,12 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
             Games.RealTimeMultiplayer.leave(getApiClient(), null, mRoomId);
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
+        updateRoom(room);
     }
 
     @Override
     public void onPeerJoined(Room room, List<String> strings) {
-
+        updateRoom(room);
     }
 
     @Override
@@ -320,16 +462,26 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
             Games.RealTimeMultiplayer.leave(getApiClient(), null, mRoomId);
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
+        updateRoom(room);
     }
 
     @Override
     public void onConnectedToRoom(Room room) {
         mRoomId = room.getRoomId();
+        mParticipants = room.getParticipants();
+        mMyId = room.getParticipantId(Games.Players.getCurrentPlayerId(getApiClient()));
     }
 
     @Override
     public void onDisconnectedFromRoom(Room room) {
         mRoomId = null;
+        // leave the room
+        Games.RealTimeMultiplayer.leave(getApiClient(), null, mRoomId);
+
+        // clear the flag that keeps the screen on
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        // show error message and return to main screen
     }
 
     @Override
@@ -338,7 +490,9 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
             // add new player to an ongoing game
         } else if (shouldStartGame(room)) {
             // start game!
+            startGame();
         }
+        updateRoom(room);
     }
 
     @Override
@@ -352,6 +506,7 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
             Games.RealTimeMultiplayer.leave(getApiClient(), null, mRoomId);
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
+        updateRoom(room);
     }
 
     @Override
@@ -362,5 +517,16 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
     @Override
     public void onP2PDisconnected(String s) {
 
+    }
+
+
+    void updateRoom(Room room) {
+        if (room != null) {
+            mParticipants = room.getParticipants();
+        }
+        /*
+        if (mParticipants != null) {
+            updatePeerScoresDisplay();
+        }*/
     }
 }

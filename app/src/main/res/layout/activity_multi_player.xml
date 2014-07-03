@@ -27,7 +27,7 @@
         android:id="@+id/invatations_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:onClick="invitePlayer"
+        android:onClick="invitationBox"
         android:text="@string/invatations_button" />
 
 </LinearLayout>
