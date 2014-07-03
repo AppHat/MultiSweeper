@@ -554,7 +554,7 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
 
     @Override
     public void onInitGameBoard(Tile[][] tiles) {
-        byte[] message = new byte[tiles.length * 4 + 1];
+        byte[] message = new byte[tiles.length * tiles[0].length * 4 + 1];
         message[0] = 'B';
 
         int i = 1;
