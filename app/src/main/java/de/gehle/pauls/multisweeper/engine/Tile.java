@@ -5,13 +5,13 @@ public class Tile {
     private MinesweeperObserver observer;
 
     public enum TileState {
-        Covered,        // not yet opened (only for shownState)
-        Number,         // a no-mine field (default for realState)
-        Flag,           // a field considered being a mine by user (only for shownState)
-        Unknown,        // a field, where user doesn't know, what it is(only for shownState)
-        Mine,           // a mined field
-        BadFlag,        // a no-mine field covered with a flag by user (only for Game Over)
-        ExplodedMine    // the mine, which the user stepped on (only for Game Over)
+        COVERED,         // not yet opened (only for shownState)
+        NUMBER,          // a no-mine field (default for realState)
+        FLAG,            // a field considered being a mine by user (only for shownState)
+        UNKNOWN,         // a field, where user doesn't know, what it is(only for shownState)
+        MINE,            // a mined field
+        BAD_FLAG,        // a no-mine field covered with a flag by user (only for Game Over)
+        EXPLODED_MINE    // the mine, which the user stepped on (only for Game Over)
     }
 
     // that is, what tile really is
@@ -21,6 +21,9 @@ public class Tile {
     private TileState shownState;
 
     private int nrSurroundingMines;
+    private int nrSurroundingFlags;
+
+    private boolean numberUncovered;
 
     // coordinates of this cell
     private int row, col;
@@ -29,33 +32,30 @@ public class Tile {
         this.observer = observer;
         this.row = row;
         this.col = col;
-        realState = TileState.Number;
-        shownState = TileState.Covered;
+        realState = TileState.NUMBER;
+        shownState = TileState.COVERED;
         nrSurroundingMines = 0;
+        nrSurroundingFlags = 0;
+        numberUncovered = false;
     }
 
     public TileState openTile() {
-        if (shownState != TileState.Covered && shownState != TileState.Unknown) {
+        if (shownState != TileState.COVERED && shownState != TileState.UNKNOWN) {
             return shownState;
         }
-        if (realState == TileState.Mine) {
-            shownState = TileState.ExplodedMine;
+        if (realState == TileState.MINE) {
+            shownState = TileState.EXPLODED_MINE;
         } else {
             shownState = realState;
         }
         observer.updateTile(row, col);
-        return realState;
+        return shownState;
     }
 
     public void gameOver() {
-        if (!isChangeable()) {
-            // shownState is correct in this case
-            return;
-        }
-
-        if (shownState == TileState.Flag &&
-                realState != TileState.Mine) {
-            shownState = TileState.BadFlag;
+        if (shownState == TileState.FLAG &&
+            realState != TileState.MINE) {
+            shownState = TileState.BAD_FLAG;
             observer.updateTile(row, col);
             return;
         }
@@ -72,32 +72,45 @@ public class Tile {
     }
 
     public boolean isEmpty() {
-        return shownState == TileState.Number && nrSurroundingMines == 0;
+        return shownState == TileState.NUMBER && nrSurroundingMines == 0;
+    }
+
+    public void incNrSurroundingFlags() { ++nrSurroundingFlags; }
+
+    public void decNrSurroundingFlags() { --nrSurroundingFlags; }
+
+    public int getNrSurroundingFlags() { return nrSurroundingFlags; }
+
+    public void setNumberUncovered() { numberUncovered = true; }
+
+    public boolean isUncoverable(){
+        return shownState == TileState.COVERED ||
+               shownState == TileState.UNKNOWN ||
+               (shownState == TileState.NUMBER && !numberUncovered);
     }
 
     public boolean isChangeable() {
-        return shownState == TileState.Covered ||
-                shownState == TileState.Unknown ||
-                shownState == TileState.Flag;
+        return isUncoverable() ||
+               shownState == TileState.FLAG;
     }
 
     public void setCovered() {
         if (isChangeable()) {
-            shownState = TileState.Covered;
+            shownState = TileState.COVERED;
             observer.updateTile(row, col);
         }
     }
 
     public void setFlag() {
         if (isChangeable()) {
-            shownState = TileState.Flag;
+            shownState = TileState.FLAG;
             observer.updateTile(row, col);
         }
     }
 
     public void setUnknown() {
         if (isChangeable()) {
-            shownState = TileState.Unknown;
+            shownState = TileState.UNKNOWN;
             observer.updateTile(row, col);
         }
     }
@@ -110,11 +123,11 @@ public class Tile {
     }
 
     public void putMine() {
-        realState = TileState.Mine;
+        realState = TileState.MINE;
     }
 
     public boolean isMine() {
-        return realState == TileState.Mine;
+        return realState == TileState.MINE;
     }
 
 }

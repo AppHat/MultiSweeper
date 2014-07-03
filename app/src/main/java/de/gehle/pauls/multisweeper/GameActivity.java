@@ -95,28 +95,28 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
         tileButtons[row][col].setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
         tileButtons[row][col].setPadding(0, 0, 0, 0);
         tileButtons[row][col].setTypeface(null, Typeface.NORMAL);
-        if (state == Tile.TileState.Covered) {
+        if (state == Tile.TileState.COVERED) {
             tileButtons[row][col].setText("");
-        } else if (state == Tile.TileState.Number) {
-            tileButtons[row][col].setEnabled(false);
+        } else if (state == Tile.TileState.NUMBER) {
             if (tile.getNrSurroundingMines() == 0) {
+                tileButtons[row][col].setEnabled(false);
                 tileButtons[row][col].setText("");
             } else {
                 tileButtons[row][col].setText(Integer.toString(tile.getNrSurroundingMines()));
-                tileButtons[row][col].setTextColor(colors[tile.getNrSurroundingMines()]);
+                tileButtons[row][col].setTextColor(colors[tile.getNrSurroundingMines() - 1]);
             }
-        } else if (state == Tile.TileState.Flag) {
+        } else if (state == Tile.TileState.FLAG) {
             Drawable image = getResources().getDrawable(R.drawable.flag_player1);
             image.setBounds(0, 0, 45, 45);
             tileButtons[row][col].setPadding(8, 0, 0, 0);
             tileButtons[row][col].setCompoundDrawables(image, null, null, null);
 
-        } else if (state == Tile.TileState.Unknown) {
+        } else if (state == Tile.TileState.UNKNOWN) {
             tileButtons[row][col].setText("?");
             tileButtons[row][col].setTextColor(Color.parseColor("#00d9ff"));
             tileButtons[row][col].setTypeface(null, Typeface.BOLD);
 
-        } else if (state == Tile.TileState.Mine) {
+        } else if (state == Tile.TileState.MINE) {
             tileButtons[row][col].setEnabled(false);
             tileButtons[row][col].setText("");
             Drawable image = getResources().getDrawable(R.drawable.mine);
@@ -124,7 +124,7 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
             tileButtons[row][col].setPadding(8, 0, 0, 0);
             tileButtons[row][col].setCompoundDrawables(image, null, null, null);
 
-        } else if (state == Tile.TileState.BadFlag) {
+        } else if (state == Tile.TileState.BAD_FLAG) {
             tileButtons[row][col].setEnabled(false);
             if (tile.getNrSurroundingMines() == 0) {
                 tileButtons[row][col].setText("");
@@ -139,7 +139,7 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
             tileButtons[row][col].setCompoundDrawablePadding(-53);
             tileButtons[row][col].setTextColor(Color.parseColor("#e9e9e9"));
 
-        } else if (state == Tile.TileState.ExplodedMine) {
+        } else if (state == Tile.TileState.EXPLODED_MINE) {
             tileButtons[row][col].setEnabled(false);
             tileButtons[row][col].setText("");
             Drawable image = getResources().getDrawable(R.drawable.mine_exploded);

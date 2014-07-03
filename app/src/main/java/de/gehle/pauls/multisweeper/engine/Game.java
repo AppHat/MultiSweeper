@@ -1,8 +1,6 @@
 package de.gehle.pauls.multisweeper.engine;
 
 import android.os.Handler;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.util.Log;
 
 import java.util.Random;
@@ -60,20 +58,21 @@ public class Game {
         this.difficulty = difficulties[difficulty.ordinal()];
         timer = new Timer(observer);
         mineCounter = new MineCounter(observer, this.difficulty.mines);
+        gameBoard = new GameBoard(observer);
         setGameState(GameState.GAMESTATE_PLAYING);
     }
 
     public void start() {
         score = 0;
         mineCounter.setMineCounter(difficulty.mines);
-        gameBoard = new GameBoard(observer);
         gameBoard.setupMineField(difficulty.rows, difficulty.cols, difficulty.mines);
     }
 
     public void playerMove(int row, int col) {
         init(row, col);
-        Tile.TileState state = gameBoard.uncover(row, col);
-        if (state == Tile.TileState.Mine) {
+
+        gameBoard.uncover(row, col);
+        if (checkLose()) {
             endGame();
             setGameState(GameState.GAMESTATE_LOST);
         } else if (checkWin()){
@@ -82,6 +81,8 @@ public class Game {
         }
     }
 
+    private boolean checkLose() { return gameBoard.hitMine(); }
+
     private boolean checkWin() {
         return gameBoard.getUncoveredFields() == 0;
     }
@@ -89,21 +90,7 @@ public class Game {
     public void playerMoveAlt(int row, int col) {
         init(row, col);
 
-        Tile tile = gameBoard.getTile(row, col);
-        if (!tile.isChangeable()) {
-            return;
-        }
-
-        if (tile.getState() == Tile.TileState.Covered) {
-            tile.setFlag();
-            mineCounter.dec();
-        } else if (tile.getState() == Tile.TileState.Flag) {
-            tile.setUnknown();
-            mineCounter.inc();
-        } else {
-            tile.setCovered();
-        }
-
+        gameBoard.swapMarker(row, col);
     }
 
     private void init(int row, int col) {
@@ -178,11 +165,6 @@ public class Game {
         timer.stop();
         timer.reset();
         mineCounter.reset();
-        gameBoard.setupMineField(
-                difficulty.rows,
-                difficulty.cols,
-                difficulty.mines
-        );
         setGameState(GameState.GAMESTATE_PLAYING);
         started = false;
     }
@@ -193,7 +175,8 @@ public class Game {
  * GameBoard
  */
 class GameBoard {
-    MinesweeperObserver observer;
+    private MinesweeperObserver observer;
+    private boolean hitMine;
 
     private Tile[][] tiles;
 
@@ -203,11 +186,19 @@ class GameBoard {
 
     private int uncoveredFields;
 
+    private enum Action{
+        UNCOVER,
+        UPDATE_SURROUNDING_MINE_COUNT,
+        INC_SURROUNDING_FLAGS_COUNT,
+        DEC_SURROUNDING_FLAGS_COUNT
+    }
+
     public GameBoard(MinesweeperObserver observer) {
         this.observer = observer;
     }
 
     public void setupMineField(int rows, int cols, int mines) {
+        hitMine = false;
         totalRows = rows;
         totalCols = cols;
         totalMines = mines;
@@ -242,49 +233,65 @@ class GameBoard {
             /**
              * Refresh surrounding mines counters
              */
-            int startRow = mineRow - 1;
-            int startCol = mineCol - 1;
-            int checkRows = 3;
-            int checkCols = 3;
-
-            if (startRow < 0) {
-                startRow = 0;
-                checkRows = 2;
-            } else if (startRow + 3 > totalRows) {
-                checkRows = 2;
-            }
-
-            if (startCol < 0) {
-                startCol = 0;
-                checkCols = 2;
-            } else if (startCol + 3 > totalCols) {
-                checkCols = 2;
-            }
-
-            for (int j = startRow; j < startRow + checkRows; j++) {
-                for (int k = startCol; k < startCol + checkCols; k++) {
-                    if (!tiles[j][k].isMine()) {
-                        tiles[j][k].updateSurroundingMineCount();
-                    }
-                }
-            }
-
+            handleSurroundingTiles(mineRow, mineCol, Action.UPDATE_SURROUNDING_MINE_COUNT);
         }
     }
 
     public Tile.TileState uncover(int row, int col) {
-        if (tiles[row][col].isChangeable()) {
-            --uncoveredFields;
-        }
-        Tile.TileState state = tiles[row][col].openTile();
+        Tile.TileState state = tiles[row][col].getState();
 
-        if (!tiles[row][col].isEmpty()) {
+        if(! tiles[row][col].isUncoverable()){
             return state;
         }
 
-        /**
-         * Uncover surrounding tiles if noSurroundingMines == 0
-         */
+        if (state == Tile.TileState.COVERED || state == Tile.TileState.UNKNOWN) {
+            --uncoveredFields;
+        }
+
+        // if the field is already uncovered and is a number
+        // check for surrounding flags and mines.
+        // if for every mine there is a flag, uncover all surrounding fields
+        if(state == Tile.TileState.NUMBER){
+            tiles[row][col].setNumberUncovered();
+            if(tiles[row][col].getNrSurroundingMines() == tiles[row][col].getNrSurroundingFlags()){
+                handleSurroundingTiles(row, col, Action.UNCOVER);
+                return state;
+            }
+        }
+
+        state = tiles[row][col].openTile();
+
+        if(state == Tile.TileState.EXPLODED_MINE){
+            hitMine = true;
+        }
+
+        // if the tile has no surrounding mines, open surrounding tiles
+        if (tiles[row][col].isEmpty()) {
+            handleSurroundingTiles(row, col, Action.UNCOVER);
+        }
+        return state;
+    }
+
+    public void swapMarker(int row, int col){
+        Tile tile = getTile(row, col);
+        if (!tile.isChangeable()) {
+            return;
+        }
+
+        if (tile.getState() == Tile.TileState.COVERED) {
+            tile.setFlag();
+            handleSurroundingTiles(row, col, Action.INC_SURROUNDING_FLAGS_COUNT);
+            //mineCounter.dec();
+        } else if (tile.getState() == Tile.TileState.FLAG) {
+            tile.setUnknown();
+            handleSurroundingTiles(row, col, Action.DEC_SURROUNDING_FLAGS_COUNT);
+            //mineCounter.inc();
+        } else {
+            tile.setCovered();
+        }
+    }
+
+    private void handleSurroundingTiles(int row, int col, Action action){
         int startRow = row - 1;
         int startCol = col - 1;
         int checkRows = 3;
@@ -306,12 +313,28 @@ class GameBoard {
 
         for (int i = startRow; i < startRow + checkRows; i++) {
             for (int j = startCol; j < startCol + checkCols; j++) {
-                if (tiles[i][j].getState() == Tile.TileState.Covered) {
-                    uncover(i, j);
+                if(i == row && j == col){
+                    continue;
+                }
+                switch(action){
+                    case UNCOVER:
+                        if(tiles[i][j].getState() == Tile.TileState.COVERED ||
+                           tiles[i][j].getState() == Tile.TileState.UNKNOWN) {
+                            uncover(i, j);
+                        }
+                        break;
+                    case UPDATE_SURROUNDING_MINE_COUNT:
+                        tiles[i][j].updateSurroundingMineCount();
+                        break;
+                    case INC_SURROUNDING_FLAGS_COUNT:
+                        tiles[i][j].incNrSurroundingFlags();
+                        break;
+                    case DEC_SURROUNDING_FLAGS_COUNT:
+                        tiles[i][j].decNrSurroundingFlags();
+                        break;
                 }
             }
         }
-        return state;
     }
 
     public void uncoverAll() {
@@ -325,6 +348,8 @@ class GameBoard {
     public Tile getTile(int row, int col) {
         return tiles[row][col];
     }
+
+    public boolean hitMine() { return hitMine; }
 
     public int getUncoveredFields() {
         return uncoveredFields;
