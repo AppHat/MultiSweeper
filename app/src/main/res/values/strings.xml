@@ -16,11 +16,11 @@
     <string name="easy_label">Easy</string>
     <string name="medium_label">Medium</string>
     <string name="hard_label">Hard</string>
-    <string name="title_activity_rules">RulesActivity</string>
+    <string name="title_activity_rules">Rules</string>
     <string name="rules_content">Press Quad; Numbers surroundings mines; Blank no mines; Flag mark mines; Hit mines game over; Discover all non mines fields win game</string>
     <string name="timer">000</string>
     <string name="smiley">:)</string>
-    <string name="title_activity_multi_player">MultiPlayerActivity</string>
+    <string name="title_activity_multi_player">MultiSweeper</string>
     <string name="gamestate_won">You have won!</string>
     <string name="gamestate_lost">Game over</string>
     <string name="gamestate_button">OK</string>

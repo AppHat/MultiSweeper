@@ -107,6 +107,7 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
 
     @Override
     protected void startGame() {
+        bindGameLayout();
         super.startGame();
         mPlaying = true;
     }
@@ -459,7 +460,7 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
     public void onPeerLeft(Room room, List<String> peers) {
         // peer left -- see if game should be canceled
         if (!mPlaying && shouldCancelGame(room)) {
-            Games.RealTimeMultiplayer.leave(getApiClient(), null, mRoomId);
+            Games.RealTimeMultiplayer.leave(getApiClient(), this, mRoomId);
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
         updateRoom(room);
@@ -474,12 +475,13 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
 
     @Override
     public void onDisconnectedFromRoom(Room room) {
-        mRoomId = null;
         // leave the room
-        Games.RealTimeMultiplayer.leave(getApiClient(), null, mRoomId);
+        Games.RealTimeMultiplayer.leave(getApiClient(), this, mRoomId);
 
         // clear the flag that keeps the screen on
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        mRoomId = null;
 
         // show error message and return to main screen
     }
@@ -503,7 +505,7 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
             // the game to go on, end the game and leave the room.
         } else if (shouldCancelGame(room)) {
             // cancel the game
-            Games.RealTimeMultiplayer.leave(getApiClient(), null, mRoomId);
+            Games.RealTimeMultiplayer.leave(getApiClient(), this, mRoomId);
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
         updateRoom(room);

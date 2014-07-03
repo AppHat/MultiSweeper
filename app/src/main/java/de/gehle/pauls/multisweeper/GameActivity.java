@@ -41,12 +41,6 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.game);
-
-        mineField = (TableLayout) findViewById(R.id.MineField);
-        timerText = (TextView) findViewById(R.id.Timer);
-        mineCountText = (TextView) findViewById(R.id.MineCount);
-        //imageButton = (ImageButton) findViewById(R.id.Smiley);
 
         Intent intent = getIntent();
         int difficulty = intent.getIntExtra(
@@ -59,6 +53,15 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
             // TODO error handling
         }
         game = new Game(this, Game.DifficultyId.values()[difficulty]);
+    }
+
+    protected void bindGameLayout() {
+        setContentView(R.layout.game);
+
+        mineField = (TableLayout) findViewById(R.id.MineField);
+        timerText = (TextView) findViewById(R.id.Timer);
+        mineCountText = (TextView) findViewById(R.id.MineCount);
+        //imageButton = (ImageButton) findViewById(R.id.Smiley);
     }
 
     protected void startGame() {
