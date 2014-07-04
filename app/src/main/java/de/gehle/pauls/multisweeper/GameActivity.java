@@ -11,7 +11,6 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -32,6 +31,7 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
     private final int tilePadding = 2;
 
     protected Game game;
+    protected int myId;
     private TableLayout mineField;
     private TextView timerText;
     private TextView mineCountText;
@@ -44,7 +44,7 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
 
         Intent intent = getIntent();
         int difficulty = intent.getIntExtra(
-                Game.KEY_DIFFICULTY, R.string.easy_label);
+                Game.KEY_DIFFICULTY, 0);
 
         if (difficulty < 0 ||
                 difficulty > R.string.hard_label) {
@@ -63,8 +63,8 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
         //imageButton = (ImageButton) findViewById(R.id.Smiley);
     }
 
-    protected void startGame() {
-        game.start();
+    protected void startGame(int nrOfPlayers) {
+        game.start(nrOfPlayers);
         Log.d("Multisweeper", "Game started");
         initButtons();
         showGameState();
@@ -149,26 +149,37 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
     }
 
     @Override
-    public void updateTimer() {
-        timerText.setText(game.getTime());
+    public void updateTimer(String time) {
+        if(timerText == null){
+            return;
+        }
+        timerText.setText(time);
     }
 
     @Override
-    public void updateMineCounter() {
-        mineCountText.setText(game.getRemainingMines());
+    public void updateMineCounter(String mineCounter) {
+        if(mineCountText == null){
+            return;
+        }
+        mineCountText.setText(mineCounter);
     }
 
     @Override
-    public void onGameStateChanged(Game.GameState newState) {
-        if (newState == Game.GameState.GAMESTATE_WON || newState == Game.GameState.GAMESTATE_LOST) {
+    /**
+     * newState = true stands for playing
+     * newState = false stands for game over
+     */
+    public void onGameStateChanged(boolean gameOver) {
+        if (gameOver) {
+            Log.d("GameActivity", "Game finished");
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-            int score = game.getScore();
+            int score = game.getScore(myId);
 
-            if (newState == Game.GameState.GAMESTATE_WON) {
+            if (game.getPlace(myId) == 1 && game.getScore(myId) > 0) {
                 dialogBuilder.setTitle(R.string.gamestate_won);
                 Games.Leaderboards.submitScore(getApiClient(), getString(R.string.leaderboard_singleplayer), score);
                 Log.d("Score", "Score saved");
-            } else if (newState == Game.GameState.GAMESTATE_LOST) {
+            } else {
                 dialogBuilder.setTitle(R.string.gamestate_lost);
             }
 
@@ -176,7 +187,7 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
                     .setPositiveButton(R.string.new_game, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int id) {
-                            resetGame(null);
+                            resetGame(game.getNrOfPlayers());
                         }
                     })
                     .setNegativeButton(R.string.back, new DialogInterface.OnClickListener() {
@@ -213,7 +224,7 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
                         new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
-                                game.playerMove(curRow, curCol);
+                                game.playerMove(myId, curRow, curCol);
                             }
                         }
                 );
@@ -249,9 +260,8 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
         }
     }
 
-    public void resetGame(View view) {
-        game.reset();
-        game.start();
+    public void resetGame(int nrOfPlayers) {
+        game.start(nrOfPlayers);
         showGameState();
     }
 }

@@ -24,11 +24,17 @@ import com.google.android.gms.games.multiplayer.realtime.RoomStatusUpdateListene
 import com.google.android.gms.games.multiplayer.realtime.RoomUpdateListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import de.gehle.pauls.multisweeper.engine.Tile;
 
-public class MultiPlayerActivity extends GameActivity implements OnInvitationReceivedListener, RoomUpdateListener, RealTimeMessageReceivedListener, RoomStatusUpdateListener {
+public class MultiPlayerActivity
+        extends GameActivity
+        implements OnInvitationReceivedListener,
+                   RoomUpdateListener,
+                   RealTimeMessageReceivedListener,
+                   RoomStatusUpdateListener {
 
     private static final String TAG = "Multiplayer";
 
@@ -50,7 +56,9 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
     private boolean mPlaying = false;
     // The participants in the currently active game
     ArrayList<Participant> mParticipants = null;
-    private String mMyId = null;
+    HashMap<String, Integer> mParticipant2Id = null;
+
+    private String mMyGoogleId = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,7 +98,7 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         // go to game screen
-        startGame();
+        startGame(mParticipants.size());
     }
 
     public void invitePlayer(View view) {
@@ -105,9 +113,9 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
     }
 
     @Override
-    protected void startGame() {
+    protected void startGame(int nrOfPlayers) {
         bindGameLayout();
-        super.startGame();
+        super.startGame(nrOfPlayers);
         mPlaying = true;
     }
 
@@ -124,7 +132,8 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
                         new View.OnClickListener() {
                             @Override
                             public void onClick(View view) {
-                                game.playerMove(curRow, curCol);
+                                int id = mParticipant2Id.get(mMyGoogleId);
+                                game.playerMove(id, curRow, curCol);
                                 sendOnClick(curRow, curCol);
                             }
                         }
@@ -150,11 +159,7 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
         message[1] = (byte) row;
         message[2] = (byte) col;
 
-        for (Participant p : mParticipants) {
-            if (!p.getParticipantId().equals(mMyId)) {
-                Games.RealTimeMultiplayer.sendReliableMessage(getApiClient(), null, message, mRoomId, p.getParticipantId());
-            }
-        }
+        broadcast(message);
         Log.d(TAG, "Sending onClick with " + row + "," + col);
     }
 
@@ -165,13 +170,20 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
         message[1] = (byte) row;
         message[2] = (byte) col;
 
+        broadcast(message);
+        Log.d(TAG, "Sending onLongClick with " + row + "," + col);
+    }
+
+    private void broadcast(byte[] message){
         for (Participant p : mParticipants) {
-            if (!p.getParticipantId().equals(mMyId)) {
-                Games.RealTimeMultiplayer.sendReliableMessage(getApiClient(), null, message, mRoomId, p.getParticipantId());
+            if (!p.getParticipantId().equals(mMyGoogleId)) {
+                sendMessage(p.getParticipantId(), message);
             }
         }
+    }
 
-        Log.d(TAG, "Sending onLongClick with " + row + "," + col);
+    private void sendMessage(String id, byte[] message){
+        Games.RealTimeMultiplayer.sendReliableMessage(getApiClient(), null, message, mRoomId, id);
     }
 
     @Override
@@ -197,7 +209,7 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
             // go to game screen
-            startGame();
+            startGame(mParticipants.size());
         }
     }
 
@@ -209,7 +221,7 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
 
             if (response == Activity.RESULT_OK) {
                 // (start game)
-                startGame();
+                startGame(mParticipants.size());
             } else if (response == Activity.RESULT_CANCELED) {
                 // Waiting room was dismissed with the back button. The meaning of this
                 // action is up to the game. You may choose to leave the room and cancel the
@@ -277,7 +289,7 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
             // go to game screen
-            startGame();
+            startGame(mParticipants.size());
         }
     }
 
@@ -393,7 +405,7 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
             Log.d(TAG, "Received startGame");
             mWaitingRoomFinishedFromCode = true;
             finishActivity(RC_WAITING_ROOM);
-            startGame();
+            startGame(mParticipants.size());
         } else if (action == 'B') {
             Tile[][] tiles = new Tile[game.getRows()][game.getCols()];
 
@@ -415,7 +427,8 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
 
             if (action == 'C') {
                 Log.d(TAG, "Received onClick");
-                game.playerMove(row, col);
+                int id = mParticipant2Id.get(realTimeMessage.getSenderParticipantId());
+                game.playerMove(id, row, col);
             } else if (action == 'L') {
                 Log.d(TAG, "Received onLongClick");
                 game.playerMoveAlt(row, col);
@@ -487,7 +500,8 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
     public void onConnectedToRoom(Room room) {
         mRoomId = room.getRoomId();
         mParticipants = room.getParticipants();
-        mMyId = room.getParticipantId(Games.Players.getCurrentPlayerId(getApiClient()));
+        onParticipantsUpdated();
+        mMyGoogleId = room.getParticipantId(Games.Players.getCurrentPlayerId(getApiClient()));
     }
 
     @Override
@@ -509,7 +523,7 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
             // add new player to an ongoing game
         } else if (shouldStartGame(room)) {
             // start game!
-            startGame();
+            startGame(mParticipants.size());
         }
         updateRoom(room);
     }
@@ -542,11 +556,26 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
     void updateRoom(Room room) {
         if (room != null) {
             mParticipants = room.getParticipants();
+            onParticipantsUpdated();
         }
         /*
         if (mParticipants != null) {
             updatePeerScoresDisplay();
         }*/
+    }
+
+    private void onParticipantsUpdated(){
+        if(mParticipant2Id == null){
+            mParticipant2Id = new HashMap<String, Integer>(mParticipants.size());
+        }
+        mParticipant2Id.clear();
+        int id = 0;
+        for(Participant p : mParticipants){
+            if(p.getParticipantId().equals(mMyGoogleId)){
+                myId = id;
+            }
+            mParticipant2Id.put(p.getParticipantId(), id++);
+        }
     }
 
     @Override
@@ -567,7 +596,7 @@ public class MultiPlayerActivity extends GameActivity implements OnInvitationRec
         }
 
         for (Participant p : mParticipants) {
-            if (!p.getParticipantId().equals(mMyId)) {
+            if (!p.getParticipantId().equals(mMyGoogleId)) {
                 Games.RealTimeMultiplayer.sendReliableMessage(getApiClient(), null, message, mRoomId, p.getParticipantId());
             }
         }

@@ -7,11 +7,11 @@ public interface MinesweeperObserver {
 
     public void updateTile(int row, int col);
 
-    public void updateTimer();
+    public void updateTimer(String time);
 
-    public void updateMineCounter();
+    public void updateMineCounter(String mineCounter);
 
-    public void onGameStateChanged(Game.GameState newState);
+    public void onGameStateChanged(boolean newState);
 
     public void onInitGameBoard(Tile[][] tiles);
 }

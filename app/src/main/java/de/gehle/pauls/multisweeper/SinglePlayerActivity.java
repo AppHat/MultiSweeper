@@ -12,7 +12,8 @@ public class SinglePlayerActivity extends GameActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         bindGameLayout();
-        startGame();
+        myId = 0;
+        startGame(1);
     }
 
     @Override
@@ -29,7 +30,7 @@ public class SinglePlayerActivity extends GameActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_new) {
-            resetGame(null);
+            resetGame(1);
         }
         return super.onOptionsItemSelected(item);
     }

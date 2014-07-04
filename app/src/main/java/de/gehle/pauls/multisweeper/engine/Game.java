@@ -12,13 +12,7 @@ public class Game {
 
     public static final String KEY_DIFFICULTY = "de.gehle.pauls.multisweeper.difficulty";
 
-    public enum GameState {
-        GAMESTATE_PLAYING,
-        GAMESTATE_WON,
-        GAMESTATE_LOST
-    }
-
-    private GameState gameState;
+    private boolean gameOver;
 
     private final class Difficulty {
         public int rows;
@@ -39,68 +33,91 @@ public class Game {
     };
     private Difficulty difficulty;
 
+    private MinesweeperObserver observer;
+
+    private int nrOfPlayers;
+
     private Timer timer;
     private MineCounter mineCounter;
     private GameBoard gameBoard;
-    private MinesweeperObserver observer;
+    private Score score;
 
-    private int score = 0;
-    private boolean started = false;
-
+    /**
+     * Constructor
+     *
+     * @param observer an object, which will be notified in case of changes
+     * @param difficulty 0 for easy, 1 for medium, 2 for hard
+     */
     public Game(MinesweeperObserver observer, int difficulty) {
         this.observer = observer;
         this.difficulty = difficulties[difficulty];
         timer = new Timer(observer);
         mineCounter = new MineCounter(observer, this.difficulty.mines);
         gameBoard = new GameBoard(observer);
-        setGameState(GameState.GAMESTATE_PLAYING);
     }
 
-    public void start() {
-        score = 0;
+    /**
+     * Initialises a playable field with timer and mine-counter
+     */
+    public void start(int nrOfPlayers) {
+        timer.stop();
+        timer.reset();
+        mineCounter.reset();
+
+        this.nrOfPlayers = nrOfPlayers;
+
+        // need to create a new score object, since the number of players might be different from
+        // previous time
+        this.score = new Score(nrOfPlayers);
+        score.reset();
         mineCounter.setMineCounter(difficulty.mines);
         gameBoard.setupMineField(difficulty.rows, difficulty.cols, difficulty.mines);
+        setGameOver(false);
     }
 
-    public void playerMove(int row, int col) {
+    public void endGame() {
+        timer.stop();
+        gameBoard.uncoverAll();
+        setGameOver(true);
+    }
+
+    private void setGameOver(boolean gameOver){
+        this.gameOver = gameOver;
+        observer.onGameStateChanged(gameOver);
+    }
+
+    public void playerMove(int playerId, int row, int col) {
         init(row, col);
 
-        gameBoard.uncover(row, col);
-        if (checkLose()) {
-            endGame();
-            setGameState(GameState.GAMESTATE_LOST);
-        } else if (checkWin()) {
-            endGame();
-            setGameState(GameState.GAMESTATE_WON);
+        int uncovered = gameBoard.uncover(row, col);
+        score.inc(playerId, uncovered);
+
+        boolean end = false;
+        if(gameBoard.hitMine()){
+            score.reset(playerId);
+            end = true;
         }
-    }
-
-    private boolean checkLose() { return gameBoard.hitMine(); }
-
-    private boolean checkWin() {
-        return gameBoard.getUncoveredFields() == 0;
+        end |= gameBoard.getUncoveredFields() == 0;
+        if(end){
+            endGame();
+        }
     }
 
     public void playerMoveAlt(int row, int col) {
         init(row, col);
-
         gameBoard.swapMarker(row, col);
     }
 
     private void init(int row, int col) {
-        if (!started) {
-            started = true;
-            gameBoard.setupTiles(row, col);
-            observer.onInitGameBoard(gameBoard.getTiles());
-        }
         if (!timer.hasStarted()) {
             timer.start();
+            gameBoard.setupTiles(row, col);
+            observer.onInitGameBoard(gameBoard.getTiles());
         }
     }
 
     public void forward(Tile[][] tiles) {
         gameBoard.setTiles(tiles);
-        started = true;
     }
 
     public int getRows() {
@@ -115,60 +132,21 @@ public class Game {
         return gameBoard.getTile(row, col);
     }
 
-    /**
-     * For output on GUI
-     *
-     * @return
-     */
-    public String getRemainingMines() {
-        return mineCounter.getMineCountText();
+    public int getScore(int playerId) {
+        return score.getFinalScore(
+                playerId,
+                difficulty.cols * difficulty.rows,
+                difficulty.mines,
+                timer.getSecondsPassed());
     }
 
-    public String getTime() {
-        return timer.getCurrentTime();
+    public int getPlace(int playerId){
+        return score.getPlace(playerId);
     }
 
-    public GameState getGameState() {
-        return gameState;
+    public int getNrOfPlayers(){
+        return nrOfPlayers;
     }
-
-    private void setGameState(GameState state) {
-        gameState = state;
-        //Calculate score
-        if (getGameState() == GameState.GAMESTATE_WON) {
-            int fieldsize = difficulty.rows * difficulty.cols;
-            int minedensity = (difficulty.mines / fieldsize) * 100;
-            if (minedensity < 10 || minedensity > 90) {
-                minedensity = 1;
-            }
-            int seconds = timer.getSecondsPassed() > 0 ? timer.getSecondsPassed() : 1;
-
-            Log.d("Score", "Fieldsize: " + fieldsize);
-            Log.d("Score", "Minedensity: " + minedensity);
-            Log.d("Score", "Timer: " + seconds);
-
-            score = (fieldsize * 100 / seconds) * minedensity;
-        }
-        observer.onGameStateChanged(gameState);
-    }
-
-    public void endGame() {
-        timer.stop();
-        gameBoard.uncoverAll();
-    }
-
-    public int getScore() {
-        return score;
-    }
-
-    public void reset() {
-        timer.stop();
-        timer.reset();
-        mineCounter.reset();
-        setGameState(GameState.GAMESTATE_PLAYING);
-        started = false;
-    }
-
 }
 
 /**
@@ -237,11 +215,12 @@ class GameBoard {
         }
     }
 
-    public Tile.TileState uncover(int row, int col) {
+    public int uncover(int row, int col) {
+        int uncoveredOld = uncoveredFields;
         Tile.TileState state = tiles[row][col].getState();
 
         if(! tiles[row][col].isUncoverable()){
-            return state;
+            return uncoveredOld - uncoveredFields;
         }
 
         if (state == Tile.TileState.COVERED || state == Tile.TileState.UNKNOWN) {
@@ -255,7 +234,7 @@ class GameBoard {
             tiles[row][col].setNumberUncovered();
             if(tiles[row][col].getNrSurroundingMines() == tiles[row][col].getNrSurroundingFlags()){
                 handleSurroundingTiles(row, col, Action.UNCOVER);
-                return state;
+                return uncoveredOld - uncoveredFields;
             }
         }
 
@@ -269,7 +248,7 @@ class GameBoard {
         if (tiles[row][col].isEmpty()) {
             handleSurroundingTiles(row, col, Action.UNCOVER);
         }
-        return state;
+        return uncoveredOld - uncoveredFields;
     }
 
     public void swapMarker(int row, int col){
@@ -364,6 +343,97 @@ class GameBoard {
     }
 }
 
+
+class Score {
+
+    private int nrOfPlayers;
+    private Integer [] score;
+
+    /**
+     * Constructor for more than 1 players
+     * @param nrOfPlayers
+     */
+    Score(int nrOfPlayers){
+        this.nrOfPlayers = nrOfPlayers;
+        score = new Integer[nrOfPlayers];
+        reset();
+    }
+
+    public void inc(int playerId){
+        inc(playerId, 1);
+    }
+
+    public void inc(int playerId, int score){
+        if(!inBounds(playerId)){
+            return;
+        }
+        this.score[playerId] += score;
+    }
+
+    public int getFinalScore(int playerId, int fieldSize, int mines, int time){
+        if(!inBounds(playerId)){
+            // TODO throw an exception
+            return 0;
+        }
+
+        int minedensity = (mines / fieldSize) * 100;
+        if (minedensity < 10 || minedensity > 90) {
+            minedensity = 1;
+        }
+        int seconds = time > 0 ? time : 1;
+
+        Log.d("Score", "Uncovered: " + score[playerId]);
+        Log.d("Score", "Minedensity: " + minedensity);
+        Log.d("Score", "Timer: " + seconds);
+
+        return (score[playerId] * minedensity * 100) / seconds;
+    }
+
+    public int getPlace(int playerId) {
+        if(!inBounds(playerId)){
+            return 0;
+        }
+
+        int place = 1;
+        for(int i = 0; i < nrOfPlayers; ++i){
+            if(score[i] > score[playerId]){
+                ++place;
+            }
+        }
+        return place;
+    }
+
+    public boolean isMaxScore(int playerId) {
+        if(!inBounds(playerId)){
+            return false;
+        }
+
+        int max = 0;
+        for(int  i = 0; i < nrOfPlayers; ++i){
+            max = score[i] > max ? score[i] : max;
+        }
+        return score[playerId] == max;
+    }
+
+    public void reset(){
+        for(int i = 0; i < nrOfPlayers; ++i){
+            reset(i);
+        }
+    }
+
+    public void reset(int playerId){
+        if(!inBounds(playerId)){
+            return;
+        }
+        score[playerId] = 0;
+    }
+
+    private boolean inBounds(int i){
+        return i >= 0 && i < nrOfPlayers;
+    }
+}
+
+
 /**
  * Timer
  */
@@ -387,7 +457,7 @@ class Timer {
             } else {
                 currentTime = curTime;
             }
-            observer.updateTimer();
+            observer.updateTimer(currentTime);
             timer.postAtTime(this, currentMilliseconds);
             //run again in 1 second
             timer.postDelayed(updateTimer, 1000);
@@ -423,7 +493,7 @@ class Timer {
     public void reset() {
         currentTime = "000";
         secondsPassed = 0;
-        observer.updateTimer();
+        observer.updateTimer(currentTime);
     }
 
     public int getSecondsPassed() {
@@ -444,6 +514,7 @@ class MineCounter {
     MineCounter(MinesweeperObserver observer, int totalMines) {
         this.observer = observer;
         this.totalMines = totalMines;
+        setMineCounter(totalMines);
     }
 
     public void set(int value) {
@@ -465,7 +536,7 @@ class MineCounter {
         } else {
             mineCountText = strCounter;
         }
-        observer.updateMineCounter();
+        observer.updateMineCounter(mineCountText);
     }
 
     public void inc() {
