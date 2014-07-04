@@ -35,7 +35,7 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
     private TableLayout mineField;
     private TextView timerText;
     private TextView mineCountText;
-    private ImageButton imageButton;
+    //private ImageButton imageButton;
     protected Button[][] tileButtons;
 
     @Override
@@ -44,15 +44,14 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
 
         Intent intent = getIntent();
         int difficulty = intent.getIntExtra(
-                Game.KEY_DIFFICULTY,
-                Game.DifficultyId.DIFFICULTY_EASY.ordinal());
+                Game.KEY_DIFFICULTY, R.string.easy_label);
 
-        if (difficulty < Game.DifficultyId.DIFFICULTY_EASY.ordinal() ||
-                difficulty > Game.DifficultyId.DIFFICULTY_HARD.ordinal()) {
+        if (difficulty < 0 ||
+                difficulty > R.string.hard_label) {
             Log.d("MultiSweeper", "onCreate in SinglePlayerActivity. Invalid difficulty");
             // TODO error handling
         }
-        game = new Game(this, Game.DifficultyId.values()[difficulty]);
+        game = new Game(this, difficulty);
     }
 
     protected void bindGameLayout() {

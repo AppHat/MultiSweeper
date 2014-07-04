@@ -1,6 +1,8 @@
 package de.gehle.pauls.multisweeper.engine;
 
-public class Tile {
+import java.io.Serializable;
+
+public class Tile implements Serializable{
 
     private MinesweeperObserver observer;
 

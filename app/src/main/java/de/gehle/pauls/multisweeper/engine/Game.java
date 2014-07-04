@@ -20,13 +20,7 @@ public class Game {
 
     private GameState gameState;
 
-    public enum DifficultyId {
-        DIFFICULTY_EASY,
-        DIFFICULTY_MEDIUM,
-        DIFFICULTY_HARD
-    }
-
-    public final class Difficulty {
+    private final class Difficulty {
         public int rows;
         public int cols;
         public int mines;
@@ -53,9 +47,9 @@ public class Game {
     private int score = 0;
     private boolean started = false;
 
-    public Game(MinesweeperObserver observer, DifficultyId difficulty) {
+    public Game(MinesweeperObserver observer, int difficulty) {
         this.observer = observer;
-        this.difficulty = difficulties[difficulty.ordinal()];
+        this.difficulty = difficulties[difficulty];
         timer = new Timer(observer);
         mineCounter = new MineCounter(observer, this.difficulty.mines);
         gameBoard = new GameBoard(observer);
