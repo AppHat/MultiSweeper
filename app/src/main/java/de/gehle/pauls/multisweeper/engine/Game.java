@@ -235,8 +235,8 @@ class GameBoard {
         // check for surrounding flags and mines.
         // if for every mine there is a flag, uncover all surrounding fields
         if(state == Tile.TileState.NUMBER){
-            tiles[row][col].setNumberUncovered();
             if(tiles[row][col].getNrSurroundingMines() == tiles[row][col].getNrSurroundingFlags()){
+                tiles[row][col].setNumberUncovered();
                 handleSurroundingTiles(row, col, Action.UNCOVER);
                 return uncoveredOld - uncoveredFields;
             }
