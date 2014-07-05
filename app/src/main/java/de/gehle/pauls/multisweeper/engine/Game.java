@@ -96,7 +96,7 @@ public class Game {
             score.reset(playerId);
             end = true;
         }
-        end |= gameBoard.getUncoveredFields() == 0;
+        end |= gameBoard.getCoveredFields() == 0;
         if(end){
             endGame();
         }
@@ -166,7 +166,7 @@ class GameBoard {
     private int totalCols;
     private int totalMines;
 
-    private int uncoveredFields;
+    private int coveredFields;
 
     private enum Action{
         UNCOVER,
@@ -184,7 +184,7 @@ class GameBoard {
         totalRows = rows;
         totalCols = cols;
         totalMines = mines;
-        uncoveredFields = (rows * cols) - mines;
+        coveredFields = (rows * cols) - mines;
 
         tiles = new Tile[rows][cols];
         for (int row = 0; row < rows; row++) {
@@ -220,15 +220,15 @@ class GameBoard {
     }
 
     public int uncover(int row, int col) {
-        int uncoveredOld = uncoveredFields;
+        int coveredOld = coveredFields;
         Tile.TileState state = tiles[row][col].getState();
 
         if(! tiles[row][col].isUncoverable()){
-            return uncoveredOld - uncoveredFields;
+            return coveredOld - coveredFields;
         }
 
         if (state == Tile.TileState.COVERED || state == Tile.TileState.UNKNOWN) {
-            --uncoveredFields;
+            --coveredFields;
         }
 
         // if the field is already uncovered and is a number
@@ -238,7 +238,7 @@ class GameBoard {
             if(tiles[row][col].getNrSurroundingMines() == tiles[row][col].getNrSurroundingFlags()){
                 tiles[row][col].setNumberUncovered();
                 handleSurroundingTiles(row, col, Action.UNCOVER);
-                return uncoveredOld - uncoveredFields;
+                return coveredOld - coveredFields;
             }
         }
 
@@ -252,7 +252,7 @@ class GameBoard {
         if (tiles[row][col].isEmpty()) {
             handleSurroundingTiles(row, col, Action.UNCOVER);
         }
-        return uncoveredOld - uncoveredFields;
+        return coveredOld - coveredFields;
     }
 
     public Tile.TileState swapMarker(int row, int col){
@@ -332,8 +332,8 @@ class GameBoard {
 
     public boolean hitMine() { return hitMine; }
 
-    public int getUncoveredFields() {
-        return uncoveredFields;
+    public int getCoveredFields() {
+        return coveredFields;
     }
 }
 
