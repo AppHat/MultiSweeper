@@ -12,8 +12,6 @@ public class Game {
 
     public static final String KEY_DIFFICULTY = "de.gehle.pauls.multisweeper.difficulty";
 
-    private boolean gameOver;
-
     private final class Difficulty {
         public int rows;
         public int cols;
@@ -26,11 +24,6 @@ public class Game {
         }
     }
 
-    private final Difficulty[] difficulties = {
-            new Difficulty(10, 10, 22),
-            new Difficulty(16, 16, 56),
-            new Difficulty(30, 16, 105)
-    };
     private Difficulty difficulty;
 
     private MinesweeperObserver observer;
@@ -50,6 +43,11 @@ public class Game {
      */
     public Game(MinesweeperObserver observer, int difficulty) {
         this.observer = observer;
+        final Difficulty[] difficulties = {
+                new Difficulty(10, 10, 22),
+                new Difficulty(16, 16, 56),
+                new Difficulty(30, 16, 105)
+        };
         this.difficulty = difficulties[difficulty];
         timer = new Timer(observer);
         mineCounter = new MineCounter(observer, this.difficulty.mines);
@@ -82,7 +80,6 @@ public class Game {
     }
 
     private void setGameOver(boolean gameOver){
-        this.gameOver = gameOver;
         observer.onGameStateChanged(gameOver);
     }
 
@@ -105,7 +102,12 @@ public class Game {
 
     public void playerMoveAlt(int row, int col) {
         init(row, col);
-        gameBoard.swapMarker(row, col);
+        Tile.TileState state = gameBoard.swapMarker(row, col);
+        if(state == Tile.TileState.FLAG){
+            mineCounter.dec();
+        }else if(state == Tile.TileState.UNKNOWN){
+            mineCounter.inc();
+        }
     }
 
     private void init(int row, int col) {
@@ -251,54 +253,44 @@ class GameBoard {
         return uncoveredOld - uncoveredFields;
     }
 
-    public void swapMarker(int row, int col){
+    public Tile.TileState swapMarker(int row, int col){
         Tile tile = getTile(row, col);
-        if (!tile.isChangeable()) {
-            return;
+        Tile.TileState state = tile.getState();
+        if (!tile.isChangeable() || tile.getState() == Tile.TileState.NUMBER) {
+            // numbers can still be changeable, but you cannot put a mark on them
+            return state;
         }
 
         if (tile.getState() == Tile.TileState.COVERED) {
             tile.setFlag();
+            state = Tile.TileState.FLAG;
             handleSurroundingTiles(row, col, Action.INC_SURROUNDING_FLAGS_COUNT);
-            //mineCounter.dec();
         } else if (tile.getState() == Tile.TileState.FLAG) {
             tile.setUnknown();
+            state = Tile.TileState.UNKNOWN;
             handleSurroundingTiles(row, col, Action.DEC_SURROUNDING_FLAGS_COUNT);
-            //mineCounter.inc();
         } else {
             tile.setCovered();
+            state = Tile.TileState.COVERED;
         }
+        return state;
     }
 
     private void handleSurroundingTiles(int row, int col, Action action){
-        int startRow = row - 1;
-        int startCol = col - 1;
-        int checkRows = 3;
-        int checkCols = 3;
+        for(int i = row - 1; i < row + 2; ++i){
+            if(i < 0 || i > totalRows - 1){
+                continue;
+            }
 
-        if (startRow < 0) {
-            startRow = 0;
-            checkRows = 2;
-        } else if (startRow + 3 > totalRows) {
-            checkRows = 2;
-        }
-
-        if (startCol < 0) {
-            startCol = 0;
-            checkCols = 2;
-        } else if (startCol + 3 > totalCols) {
-            checkCols = 2;
-        }
-
-        for (int i = startRow; i < startRow + checkRows; i++) {
-            for (int j = startCol; j < startCol + checkCols; j++) {
-                if(i == row && j == col){
+            for(int j = col - 1; j < col + 2; ++j){
+                if((i == row && j == col) || j < 0 || j > totalCols - 1){
                     continue;
                 }
+
                 switch(action){
                     case UNCOVER:
                         if(tiles[i][j].getState() == Tile.TileState.COVERED ||
-                           tiles[i][j].getState() == Tile.TileState.UNKNOWN) {
+                                tiles[i][j].getState() == Tile.TileState.UNKNOWN) {
                             uncover(i, j);
                         }
                         break;
@@ -351,7 +343,7 @@ class Score {
 
     /**
      * Constructor for more than 1 players
-     * @param nrOfPlayers
+     * @param nrOfPlayers number of players to save score for
      */
     Score(int nrOfPlayers){
         this.nrOfPlayers = nrOfPlayers;
@@ -359,9 +351,9 @@ class Score {
         reset();
     }
 
-    public void inc(int playerId){
-        inc(playerId, 1);
-    }
+//    public void inc(int playerId){
+//        inc(playerId, 1);
+//    }
 
     public void inc(int playerId, int score){
         if(!inBounds(playerId)){
@@ -403,17 +395,17 @@ class Score {
         return place;
     }
 
-    public boolean isMaxScore(int playerId) {
-        if(!inBounds(playerId)){
-            return false;
-        }
-
-        int max = 0;
-        for(int  i = 0; i < nrOfPlayers; ++i){
-            max = score[i] > max ? score[i] : max;
-        }
-        return score[playerId] == max;
-    }
+//    public boolean isMaxScore(int playerId) {
+//        if(!inBounds(playerId)){
+//            return false;
+//        }
+//
+//        int max = 0;
+//        for(int  i = 0; i < nrOfPlayers; ++i){
+//            max = score[i] > max ? score[i] : max;
+//        }
+//        return score[playerId] == max;
+//    }
 
     public void reset(){
         for(int i = 0; i < nrOfPlayers; ++i){
@@ -477,9 +469,9 @@ class Timer {
         timerStarted = true;
     }
 
-    public String getCurrentTime() {
-        return currentTime;
-    }
+//    public String getCurrentTime() {
+//        return currentTime;
+//    }
 
     public boolean hasStarted() {
         return timerStarted;
@@ -509,16 +501,10 @@ class MineCounter {
     private MinesweeperObserver observer;
     private int totalMines;
     private int mineCounter;
-    private String mineCountText;
 
     MineCounter(MinesweeperObserver observer, int totalMines) {
         this.observer = observer;
         this.totalMines = totalMines;
-        setMineCounter(totalMines);
-    }
-
-    public void set(int value) {
-        totalMines = value;
         setMineCounter(totalMines);
     }
 
@@ -528,6 +514,7 @@ class MineCounter {
 
     public void setMineCounter(int counter) {
         mineCounter = counter;
+        String mineCountText;
         String strCounter = Integer.toString(mineCounter);
         if (mineCounter < 10) {
             mineCountText = "00" + strCounter;
@@ -546,13 +533,5 @@ class MineCounter {
     public void dec() {
         setMineCounter(mineCounter - 1);
         // Any actions for mineCounter < 0?
-    }
-
-    public String getMineCountText() {
-        return mineCountText;
-    }
-
-    public int getValue() {
-        return mineCounter;
     }
 }
