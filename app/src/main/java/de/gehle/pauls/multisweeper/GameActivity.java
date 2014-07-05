@@ -148,20 +148,32 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
         }
     }
 
+    private String prependZeros(int nrOfZeros, String word){
+        for(int i = 0; i < nrOfZeros; ++i){
+            word = "0" + word;
+        }
+        return word;
+    }
+
     @Override
-    public void updateTimer(String time) {
+    public void updateTimer(int secondsPassed) {
         if(timerText == null){
             return;
         }
+        String time = String.valueOf(secondsPassed);
+        time = prependZeros(3 - time.length(), time);
+
         timerText.setText(time);
     }
 
     @Override
-    public void updateMineCounter(String mineCounter) {
+    public void updateMineCounter(int mineCounter) {
         if(mineCountText == null){
             return;
         }
-        mineCountText.setText(mineCounter);
+        String mines = String.valueOf(mineCounter);
+        mines = prependZeros(3 - mines.length(), mines);
+        mineCountText.setText(mines);
     }
 
     @Override

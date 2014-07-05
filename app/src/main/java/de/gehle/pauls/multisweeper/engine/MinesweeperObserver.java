@@ -7,9 +7,9 @@ public interface MinesweeperObserver {
 
     public void updateTile(int row, int col);
 
-    public void updateTimer(String time);
+    public void updateTimer(int secondsPassed);
 
-    public void updateMineCounter(String mineCounter);
+    public void updateMineCounter(int mineCounter);
 
     public void onGameStateChanged(boolean newState);
 

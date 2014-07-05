@@ -44,9 +44,9 @@ public class Game {
     public Game(MinesweeperObserver observer, int difficulty) {
         this.observer = observer;
         final Difficulty[] difficulties = {
-                new Difficulty(10, 10, 22),
-                new Difficulty(16, 16, 56),
-                new Difficulty(30, 16, 105)
+                new Difficulty(10, 10, 15),
+                new Difficulty(16, 16, 49),
+                new Difficulty(30, 16, 90)
         };
         this.difficulty = difficulties[difficulty];
         timer = new Timer(observer);
@@ -58,17 +58,16 @@ public class Game {
      * Initialises a playable field with timer and mine-counter
      */
     public void start(int nrOfPlayers) {
+        this.nrOfPlayers = nrOfPlayers;
+
         timer.stop();
         timer.reset();
         mineCounter.reset();
-
-        this.nrOfPlayers = nrOfPlayers;
 
         // need to create a new score object, since the number of players might be different from
         // previous time
         this.score = new Score(nrOfPlayers);
         score.reset();
-        mineCounter.setMineCounter(difficulty.mines);
         gameBoard.setupMineField(difficulty.rows, difficulty.cols, difficulty.mines);
         setGameOver(false);
     }
@@ -84,6 +83,9 @@ public class Game {
     }
 
     public void playerMove(int playerId, int row, int col) {
+        Log.d("GameEngine", "Player-" + String.valueOf(playerId) + " clicked on " +
+                String.valueOf(row) + ":" + String.valueOf(col));
+
         init(row, col);
 
         int uncovered = gameBoard.uncover(row, col);
@@ -363,6 +365,10 @@ class Score {
     }
 
     public int getFinalScore(int playerId, int fieldSize, int mines, int time){
+        final int uncoveredFieldsFactor = 1;
+        final int minesFactor = 2;
+        final int timeFactor = 10;
+
         if(!inBounds(playerId)){
             // TODO throw an exception
             return 0;
@@ -378,7 +384,14 @@ class Score {
         Log.d("Score", "Minedensity: " + minedensity);
         Log.d("Score", "Timer: " + seconds);
 
-        return (score[playerId] * minedensity * 100) / seconds;
+        //return (score[playerId] * minedensity * 100) / seconds;
+        if(score[playerId] > 0) {
+            return uncoveredFieldsFactor * score[playerId] +
+                    minesFactor * minedensity +
+                    timeFactor * seconds;
+        }else{
+            return 0;
+        }
     }
 
     public int getPlace(int playerId) {
@@ -394,18 +407,6 @@ class Score {
         }
         return place;
     }
-
-//    public boolean isMaxScore(int playerId) {
-//        if(!inBounds(playerId)){
-//            return false;
-//        }
-//
-//        int max = 0;
-//        for(int  i = 0; i < nrOfPlayers; ++i){
-//            max = score[i] > max ? score[i] : max;
-//        }
-//        return score[playerId] == max;
-//    }
 
     public void reset(){
         for(int i = 0; i < nrOfPlayers; ++i){
@@ -435,21 +436,12 @@ class Timer {
     private Handler timer = new Handler();
     private int secondsPassed = 0;
     private boolean timerStarted = false;
-    private String currentTime;
+
     private Runnable updateTimer = new Runnable() {
         public void run() {
             long currentMilliseconds = System.currentTimeMillis();
             ++secondsPassed;
-            String curTime = Integer.toString(secondsPassed);
-            //update the text view
-            if (secondsPassed < 10) {
-                currentTime = "00" + curTime;
-            } else if (secondsPassed < 100) {
-                currentTime = "0" + curTime;
-            } else {
-                currentTime = curTime;
-            }
-            observer.updateTimer(currentTime);
+            observer.updateTimer(secondsPassed);
             timer.postAtTime(this, currentMilliseconds);
             //run again in 1 second
             timer.postDelayed(updateTimer, 1000);
@@ -461,17 +453,12 @@ class Timer {
     }
 
     public void start() {
-        currentTime = "000";
         if (secondsPassed == 0) {
             timer.removeCallbacks(updateTimer);
             timer.postDelayed(updateTimer, 1000);
         }
         timerStarted = true;
     }
-
-//    public String getCurrentTime() {
-//        return currentTime;
-//    }
 
     public boolean hasStarted() {
         return timerStarted;
@@ -483,9 +470,8 @@ class Timer {
     }
 
     public void reset() {
-        currentTime = "000";
         secondsPassed = 0;
-        observer.updateTimer(currentTime);
+        observer.updateTimer(secondsPassed);
     }
 
     public int getSecondsPassed() {
@@ -505,33 +491,22 @@ class MineCounter {
     MineCounter(MinesweeperObserver observer, int totalMines) {
         this.observer = observer;
         this.totalMines = totalMines;
-        setMineCounter(totalMines);
+        mineCounter = totalMines;
     }
 
     public void reset() {
-        setMineCounter(totalMines);
-    }
-
-    public void setMineCounter(int counter) {
-        mineCounter = counter;
-        String mineCountText;
-        String strCounter = Integer.toString(mineCounter);
-        if (mineCounter < 10) {
-            mineCountText = "00" + strCounter;
-        } else if (mineCounter < 100) {
-            mineCountText = "0" + strCounter;
-        } else {
-            mineCountText = strCounter;
-        }
-        observer.updateMineCounter(mineCountText);
+        mineCounter = totalMines;
+        observer.updateMineCounter(mineCounter);
     }
 
     public void inc() {
-        setMineCounter(mineCounter + 1);
+        ++mineCounter;
+        observer.updateMineCounter(mineCounter);
     }
 
     public void dec() {
-        setMineCounter(mineCounter - 1);
+        --mineCounter;
+        observer.updateMineCounter(mineCounter);
         // Any actions for mineCounter < 0?
     }
 }
