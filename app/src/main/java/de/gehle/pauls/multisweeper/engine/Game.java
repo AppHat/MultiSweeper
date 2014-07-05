@@ -38,15 +38,15 @@ public class Game {
     /**
      * Constructor
      *
-     * @param observer an object, which will be notified in case of changes
+     * @param observer   an object, which will be notified in case of changes
      * @param difficulty 0 for easy, 1 for medium, 2 for hard
      */
     public Game(MinesweeperObserver observer, int difficulty) {
         this.observer = observer;
         final Difficulty[] difficulties = {
-                new Difficulty(10, 10, 15),
-                new Difficulty(16, 16, 49),
-                new Difficulty(30, 16, 90)
+                new Difficulty(10, 10, 10),
+                new Difficulty(16, 16, 40),
+                new Difficulty(30, 16, 100)
         };
         this.difficulty = difficulties[difficulty];
         timer = new Timer(observer);
@@ -78,7 +78,7 @@ public class Game {
         setGameOver(true);
     }
 
-    private void setGameOver(boolean gameOver){
+    private void setGameOver(boolean gameOver) {
         observer.onGameStateChanged(gameOver);
     }
 
@@ -92,12 +92,12 @@ public class Game {
         score.inc(playerId, uncovered);
 
         boolean end = false;
-        if(gameBoard.hitMine()){
+        if (gameBoard.hitMine()) {
             score.reset(playerId);
             end = true;
         }
         end |= gameBoard.getCoveredFields() == 0;
-        if(end){
+        if (end) {
             endGame();
         }
     }
@@ -105,9 +105,9 @@ public class Game {
     public void playerMoveAlt(int row, int col) {
         init(row, col);
         Tile.TileState state = gameBoard.swapMarker(row, col);
-        if(state == Tile.TileState.FLAG){
+        if (state == Tile.TileState.FLAG) {
             mineCounter.dec();
-        }else if(state == Tile.TileState.UNKNOWN){
+        } else if (state == Tile.TileState.UNKNOWN) {
             mineCounter.inc();
         }
     }
@@ -144,11 +144,11 @@ public class Game {
                 timer.getSecondsPassed());
     }
 
-    public int getPlace(int playerId){
+    public int getPlace(int playerId) {
         return score.getPlace(playerId);
     }
 
-    public int getNrOfPlayers(){
+    public int getNrOfPlayers() {
         return nrOfPlayers;
     }
 }
@@ -168,7 +168,7 @@ class GameBoard {
 
     private int coveredFields;
 
-    private enum Action{
+    private enum Action {
         UNCOVER,
         UPDATE_SURROUNDING_MINE_COUNT,
         INC_SURROUNDING_FLAGS_COUNT,
@@ -223,7 +223,7 @@ class GameBoard {
         int coveredOld = coveredFields;
         Tile.TileState state = tiles[row][col].getState();
 
-        if(! tiles[row][col].isUncoverable()){
+        if (!tiles[row][col].isUncoverable()) {
             return coveredOld - coveredFields;
         }
 
@@ -234,8 +234,8 @@ class GameBoard {
         // if the field is already uncovered and is a number
         // check for surrounding flags and mines.
         // if for every mine there is a flag, uncover all surrounding fields
-        if(state == Tile.TileState.NUMBER){
-            if(tiles[row][col].getNrSurroundingMines() == tiles[row][col].getNrSurroundingFlags()){
+        if (state == Tile.TileState.NUMBER) {
+            if (tiles[row][col].getNrSurroundingMines() == tiles[row][col].getNrSurroundingFlags()) {
                 tiles[row][col].setNumberUncovered();
                 handleSurroundingTiles(row, col, Action.UNCOVER);
                 return coveredOld - coveredFields;
@@ -244,7 +244,7 @@ class GameBoard {
 
         state = tiles[row][col].openTile();
 
-        if(state == Tile.TileState.EXPLODED_MINE){
+        if (state == Tile.TileState.EXPLODED_MINE) {
             hitMine = true;
         }
 
@@ -255,7 +255,7 @@ class GameBoard {
         return coveredOld - coveredFields;
     }
 
-    public Tile.TileState swapMarker(int row, int col){
+    public Tile.TileState swapMarker(int row, int col) {
         Tile tile = getTile(row, col);
         Tile.TileState state = tile.getState();
         if (!tile.isChangeable() || tile.getState() == Tile.TileState.NUMBER) {
@@ -278,20 +278,20 @@ class GameBoard {
         return state;
     }
 
-    private void handleSurroundingTiles(int row, int col, Action action){
-        for(int i = row - 1; i < row + 2; ++i){
-            if(i < 0 || i > totalRows - 1){
+    private void handleSurroundingTiles(int row, int col, Action action) {
+        for (int i = row - 1; i < row + 2; ++i) {
+            if (i < 0 || i > totalRows - 1) {
                 continue;
             }
 
-            for(int j = col - 1; j < col + 2; ++j){
-                if((i == row && j == col) || j < 0 || j > totalCols - 1){
+            for (int j = col - 1; j < col + 2; ++j) {
+                if ((i == row && j == col) || j < 0 || j > totalCols - 1) {
                     continue;
                 }
 
-                switch(action){
+                switch (action) {
                     case UNCOVER:
-                        if(tiles[i][j].getState() == Tile.TileState.COVERED ||
+                        if (tiles[i][j].getState() == Tile.TileState.COVERED ||
                                 tiles[i][j].getState() == Tile.TileState.UNKNOWN) {
                             uncover(i, j);
                         }
@@ -330,7 +330,9 @@ class GameBoard {
         this.tiles = tiles;
     }
 
-    public boolean hitMine() { return hitMine; }
+    public boolean hitMine() {
+        return hitMine;
+    }
 
     public int getCoveredFields() {
         return coveredFields;
@@ -341,13 +343,14 @@ class GameBoard {
 class Score {
 
     private int nrOfPlayers;
-    private Integer [] score;
+    private Integer[] score;
 
     /**
      * Constructor for more than 1 players
+     *
      * @param nrOfPlayers number of players to save score for
      */
-    Score(int nrOfPlayers){
+    Score(int nrOfPlayers) {
         this.nrOfPlayers = nrOfPlayers;
         score = new Integer[nrOfPlayers];
         reset();
@@ -357,19 +360,19 @@ class Score {
 //        inc(playerId, 1);
 //    }
 
-    public void inc(int playerId, int score){
-        if(!inBounds(playerId)){
+    public void inc(int playerId, int score) {
+        if (!inBounds(playerId)) {
             return;
         }
         this.score[playerId] += score;
     }
 
-    public int getFinalScore(int playerId, int fieldSize, int mines, int time){
+    public int getFinalScore(int playerId, int fieldSize, int mines, int time) {
         final int uncoveredFieldsFactor = 1;
         final int minesFactor = 2;
         final int timeFactor = 10;
 
-        if(!inBounds(playerId)){
+        if (!inBounds(playerId)) {
             // TODO throw an exception
             return 0;
         }
@@ -385,43 +388,43 @@ class Score {
         Log.d("Score", "Timer: " + seconds);
 
         //return (score[playerId] * minedensity * 100) / seconds;
-        if(score[playerId] > 0) {
+        if (score[playerId] > 0) {
             return uncoveredFieldsFactor * score[playerId] +
                     minesFactor * minedensity +
                     timeFactor * seconds;
-        }else{
+        } else {
             return 0;
         }
     }
 
     public int getPlace(int playerId) {
-        if(!inBounds(playerId)){
+        if (!inBounds(playerId)) {
             return 0;
         }
 
         int place = 1;
-        for(int i = 0; i < nrOfPlayers; ++i){
-            if(score[i] > score[playerId]){
+        for (int i = 0; i < nrOfPlayers; ++i) {
+            if (score[i] > score[playerId]) {
                 ++place;
             }
         }
         return place;
     }
 
-    public void reset(){
-        for(int i = 0; i < nrOfPlayers; ++i){
+    public void reset() {
+        for (int i = 0; i < nrOfPlayers; ++i) {
             reset(i);
         }
     }
 
-    public void reset(int playerId){
-        if(!inBounds(playerId)){
+    public void reset(int playerId) {
+        if (!inBounds(playerId)) {
             return;
         }
         score[playerId] = 0;
     }
 
-    private boolean inBounds(int i){
+    private boolean inBounds(int i) {
         return i >= 0 && i < nrOfPlayers;
     }
 }

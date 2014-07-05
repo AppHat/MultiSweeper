@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="de.gehle.pauls.multisweeper.components.tilebutton">
+
+    <item android:textColor="@color/cyan" app:surrounding_mines_1="true" />
+    <item android:text="2" android:textColor="@color/green" />
+    <item android:text="3" android:textColor="@color/red" />
+    <item android:text="4" android:textColor="@color/ltgray" />
+    <item android:text="5" android:textColor="@color/white" />
+    <item android:text="6" android:textColor="@color/yellow" />
+    <item android:text="7" android:textColor="@color/blue" />
+    <item android:text="8" android:textColor="@color/gray" />
+    <item android:textColor="@color/white" />
+
+</selector>

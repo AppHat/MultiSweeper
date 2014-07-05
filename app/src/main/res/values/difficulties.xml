@@ -1,0 +1,24 @@
+<resources>
+    <!--
+    <array name="difficulty.formatExample">
+        <item>rows</item>
+        <item>cols</item>
+        <item>mines</item>
+    </array>
+    -->
+    <integer-array name="easy">
+        <item>10</item>
+        <item>10</item>
+        <item>22</item>
+    </integer-array>
+    <integer-array name="medium">
+        <item>16</item>
+        <item>16</item>
+        <item>56</item>
+    </integer-array>
+    <integer-array name="hard">
+        <item>30</item>
+        <item>16</item>
+        <item>105</item>
+    </integer-array>
+</resources>

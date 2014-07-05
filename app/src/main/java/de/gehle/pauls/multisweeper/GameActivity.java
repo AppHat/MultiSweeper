@@ -3,14 +3,10 @@ package de.gehle.pauls.multisweeper;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -18,6 +14,7 @@ import android.widget.TextView;
 import com.google.android.gms.games.Games;
 import com.google.example.games.basegameutils.BaseGameActivity;
 
+import de.gehle.pauls.multisweeper.components.TileButton;
 import de.gehle.pauls.multisweeper.engine.Game;
 import de.gehle.pauls.multisweeper.engine.MinesweeperObserver;
 import de.gehle.pauls.multisweeper.engine.Tile;
@@ -27,8 +24,8 @@ import de.gehle.pauls.multisweeper.engine.Tile;
  */
 public abstract class GameActivity extends BaseGameActivity implements MinesweeperObserver {
 
-    private final int tileWH = 32;
-    private final int tilePadding = 2;
+    private final static int tileWH = 32;
+    private final static int tilePadding = 2;
 
     protected Game game;
     protected int myId;
@@ -36,7 +33,7 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
     private TextView timerText;
     private TextView mineCountText;
     //private ImageButton imageButton;
-    protected Button[][] tileButtons;
+    protected TileButton[][] tileButtons;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,69 +79,11 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
 
     @Override
     public void updateTile(int row, int col) {
-        int[] colors = {
-                Color.CYAN, Color.GREEN, Color.RED, Color.RED,
-                Color.LTGRAY, Color.GREEN, Color.WHITE, Color.YELLOW,
-                Color.GRAY
-        };
         Tile tile = game.getTile(row, col);
         Tile.TileState state = tile.getState();
-        tileButtons[row][col].setEnabled(true);
-        tileButtons[row][col].setTextColor(Color.WHITE);
-        tileButtons[row][col].setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
-        tileButtons[row][col].setPadding(0, 0, 0, 0);
-        tileButtons[row][col].setTypeface(null, Typeface.NORMAL);
-        if (state == Tile.TileState.COVERED) {
-            tileButtons[row][col].setText("");
-        } else if (state == Tile.TileState.NUMBER) {
-            if (tile.getNrSurroundingMines() == 0) {
-                tileButtons[row][col].setEnabled(false);
-                tileButtons[row][col].setText("");
-            } else {
-                tileButtons[row][col].setText(Integer.toString(tile.getNrSurroundingMines()));
-                tileButtons[row][col].setTextColor(colors[tile.getNrSurroundingMines() - 1]);
-            }
-        } else if (state == Tile.TileState.FLAG) {
-            Drawable image = getResources().getDrawable(R.drawable.flag_player1);
-            image.setBounds(0, 0, 45, 45);
-            tileButtons[row][col].setPadding(8, 0, 0, 0);
-            tileButtons[row][col].setCompoundDrawables(image, null, null, null);
-
-        } else if (state == Tile.TileState.UNKNOWN) {
-            tileButtons[row][col].setText("?");
-            tileButtons[row][col].setTextColor(Color.parseColor("#00d9ff"));
-            tileButtons[row][col].setTypeface(null, Typeface.BOLD);
-
-        } else if (state == Tile.TileState.MINE) {
-            tileButtons[row][col].setEnabled(false);
-            tileButtons[row][col].setText("");
-            Drawable image = getResources().getDrawable(R.drawable.mine);
-            image.setBounds(0, 0, 45, 45);
-            tileButtons[row][col].setPadding(8, 0, 0, 0);
-            tileButtons[row][col].setCompoundDrawables(image, null, null, null);
-
-        } else if (state == Tile.TileState.BAD_FLAG) {
-            tileButtons[row][col].setEnabled(false);
-            if (tile.getNrSurroundingMines() == 0) {
-                tileButtons[row][col].setText("");
-            } else {
-                tileButtons[row][col].setText(Integer.toString(tile.getNrSurroundingMines()));
-                tileButtons[row][col].setTextColor(colors[tile.getNrSurroundingMines()]);
-            }
-            Drawable image = getResources().getDrawable(R.drawable.badflag_player1);
-            image.setBounds(0, 0, 45, 45);
-            tileButtons[row][col].setPadding(8, 0, 0, 0);
-            tileButtons[row][col].setCompoundDrawables(image, null, null, null);
-            tileButtons[row][col].setCompoundDrawablePadding(-53);
-            tileButtons[row][col].setTextColor(Color.parseColor("#e9e9e9"));
-
-        } else if (state == Tile.TileState.EXPLODED_MINE) {
-            tileButtons[row][col].setEnabled(false);
-            tileButtons[row][col].setText("");
-            Drawable image = getResources().getDrawable(R.drawable.mine_exploded);
-            image.setBounds(0, 0, 45, 45);
-            tileButtons[row][col].setPadding(8, 0, 0, 0);
-            tileButtons[row][col].setCompoundDrawables(image, null, null, null);
+        tileButtons[row][col].setState(state);
+        if (state == Tile.TileState.NUMBER) {
+            tileButtons[row][col].setSurroundingMines(tile.getNrSurroundingMines());
         }
     }
 
@@ -157,23 +96,21 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
 
     @Override
     public void updateTimer(int secondsPassed) {
-        if(timerText == null){
-            return;
-        }
-        String time = String.valueOf(secondsPassed);
-        time = prependZeros(3 - time.length(), time);
+        if (timerText != null) {
+            String time = String.valueOf(secondsPassed);
+            time = prependZeros(3 - time.length(), time);
 
-        timerText.setText(time);
+            timerText.setText(time);
+        }
     }
 
     @Override
     public void updateMineCounter(int mineCounter) {
-        if(mineCountText == null){
-            return;
+        if (mineCountText != null) {
+            String mines = String.valueOf(mineCounter);
+            mines = prependZeros(3 - mines.length(), mines);
+            mineCountText.setText(mines);
         }
-        String mines = String.valueOf(mineCounter);
-        mines = prependZeros(3 - mines.length(), mines);
-        mineCountText.setText(mines);
     }
 
     @Override
@@ -217,7 +154,7 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
     }
 
     protected void initButtons() {
-        tileButtons = new Button[game.getRows()][game.getCols()];
+        tileButtons = new TileButton[game.getRows()][game.getCols()];
         for (int i = 0; i < game.getRows(); ++i) {
             TableRow tableRow = new TableRow(this);
             tableRow.setLayoutParams(
@@ -226,7 +163,7 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
                             tileWH * tilePadding)
             );
             for (int j = 0; j < game.getCols(); ++j) {
-                tileButtons[i][j] = new Button(this);
+                tileButtons[i][j] = new TileButton(this);
                 tableRow.addView(tileButtons[i][j]);
 
                 final int curRow = i;

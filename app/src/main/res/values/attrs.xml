@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="tile_button">
+        <attr name="surrounding_mines" format="integer" />
+        <attr name="surrounding_mines_1" format="boolean" />
+        <attr name="surrounding_mines_2" format="boolean" />
+        <attr name="surrounding_mines_3" format="boolean" />
+        <attr name="surrounding_mines_4" format="boolean" />
+        <attr name="surrounding_mines_5" format="boolean" />
+        <attr name="surrounding_mines_6" format="boolean" />
+        <attr name="surrounding_mines_7" format="boolean" />
+        <attr name="surrounding_mines_8" format="boolean" />
+    </declare-styleable>
+
+</resources>

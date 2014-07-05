@@ -5,4 +5,17 @@
         <!-- Customize your theme here. -->
     </style>
 
+    <style name="Widget.Tile" parent="android:Widget.Button">
+        <item name="android:textColor">@drawable/btn_tile</item>
+    </style>
+
+    <color name="white">#ffffff</color>
+    <color name="cyan">#00ffff</color>
+    <color name="green">#00ff00</color>
+    <color name="red">#ff0000</color>
+    <color name="ltgray">#333333</color>
+    <color name="yellow">#ffff00</color>
+    <color name="blue">#0000ff</color>
+    <color name="gray">#222222</color>
+
 </resources>
