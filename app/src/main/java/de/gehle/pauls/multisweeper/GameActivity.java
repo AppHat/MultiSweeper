@@ -124,7 +124,7 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             int score = game.getScore(myId);
 
-            if (game.getPlace(myId) == 1 && game.getScore(myId) > 0) {
+            if (game.getPlace(myId) == 1 && score > 0) {
                 dialogBuilder.setTitle(R.string.gamestate_won);
                 Games.Leaderboards.submitScore(getApiClient(), getString(R.string.leaderboard_singleplayer), score);
                 Log.d("Score", "Score saved");
