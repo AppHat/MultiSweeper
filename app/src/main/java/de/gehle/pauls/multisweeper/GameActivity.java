@@ -43,8 +43,7 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
         int difficulty = intent.getIntExtra(
                 Game.KEY_DIFFICULTY, 0);
 
-        if (difficulty < 0 ||
-                difficulty > R.string.hard_label) {
+        if (difficulty < 0 || difficulty > 2) {
             Log.d("MultiSweeper", "onCreate in SinglePlayerActivity. Invalid difficulty");
             // TODO error handling
         }
@@ -87,8 +86,8 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
         }
     }
 
-    private String prependZeros(int nrOfZeros, String word){
-        for(int i = 0; i < nrOfZeros; ++i){
+    private String prependZeros(int nrOfZeros, String word) {
+        for (int i = 0; i < nrOfZeros; ++i) {
             word = "0" + word;
         }
         return word;
