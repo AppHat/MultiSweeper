@@ -1,84 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:paddingTop="@dimen/activity_vertical_margin">
 
-<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:stretchColumns="0,1">
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
 
-        <TableRow>
+        <TextView
+            android:id="@+id/TimerTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/timer_title"
+            android:textColor="#ff00d9ff"
+            android:textSize="20sp" />
 
-            <TextView
-                android:id="@+id/TimerTitle"
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_column="0"
-                android:gravity="center"
-                android:text="@string/timer_title"
-                android:textColor="#ff00d9ff"
-                android:textSize="20sp" />
+        <TextView
+            android:id="@+id/MineCountTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/minecounter_title"
+            android:textColor="#ff00d9ff"
+            android:textSize="20sp" />
+    </LinearLayout>
 
-            <TextView
-                android:layout_weight="1"
-                android:id="@+id/MineCountTitle"
-                android:layout_width="0dp"
-                android:layout_column="1"
-                android:gravity="center"
-                android:text="@string/minecounter_title"
-                android:textColor="#ff00d9ff"
-                android:textSize="20sp" />
-        </TableRow>
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
 
-        <TableRow>
+        <TextView
+            android:id="@+id/Timer"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/timer"
+            android:textColor="#ff00d9ff"
+            android:textSize="35sp" />
 
-            <TextView
-                android:id="@+id/Timer"
-                android:layout_weight="1"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_column="0"
-                android:text="@string/timer"
-                android:textColor="#ff00d9ff"
-                android:textSize="35sp"
-                android:gravity="center" />
+        <TextView
+            android:id="@+id/MineCount"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/timer"
+            android:textColor="#ff00d9ff"
+            android:textSize="35sp" />
+    </LinearLayout>
 
-            <TextView
-                android:layout_weight="1"
-                android:id="@+id/MineCount"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_column="1"
-                android:gravity="center"
-                android:text="@string/timer"
-                android:textColor="#ff00d9ff"
-                android:textSize="35sp" />
-        </TableRow>
+    <ScrollView
+        android:id="@+id/layout"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="@color/game_board"
+        android:scrollbarStyle="insideOverlay"
+        android:scrollbars="vertical|horizontal">
 
-        <TableRow>
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-            <ScrollView
-                android:id="@+id/layout"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_span="4"
-                android:scrollbarStyle="insideOverlay"
-                android:scrollbars="vertical|horizontal">
-
-                <HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent">
-
-                    <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                        android:id="@+id/MineField"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@color/game_board"></TableLayout>
-                </HorizontalScrollView>
-            </ScrollView>
-        </TableRow>
-    </TableLayout>
+            <TableLayout
+                android:id="@+id/MineField"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center" />
+        </HorizontalScrollView>
+    </ScrollView>
 
 </LinearLayout>
