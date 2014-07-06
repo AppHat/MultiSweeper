@@ -28,7 +28,7 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
     private final static int tilePadding = 2;
 
     protected Game game;
-    protected int myId;
+    protected int myId = 0;
     private TableLayout mineField;
     private TextView timerText;
     private TextView mineCountText;
@@ -56,6 +56,10 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
         timerText = (TextView) findViewById(R.id.Timer);
         mineCountText = (TextView) findViewById(R.id.MineCount);
         //imageButton = (ImageButton) findViewById(R.id.Smiley);
+    }
+
+    protected void startGame() {
+        this.startGame(1);
     }
 
     protected void startGame(int nrOfPlayers) {
@@ -205,6 +209,10 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
                 updateTile(i, j);
             }
         }
+    }
+
+    public void resetGame() {
+        this.resetGame(1);
     }
 
     public void resetGame(int nrOfPlayers) {
