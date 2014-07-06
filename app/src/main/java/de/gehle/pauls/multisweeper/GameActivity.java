@@ -40,8 +40,7 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
         super.onCreate(savedInstanceState);
 
         Intent intent = getIntent();
-        int difficulty = intent.getIntExtra(
-                Game.KEY_DIFFICULTY, 0);
+        int difficulty = intent.getIntExtra(Game.KEY_DIFFICULTY, 0);
 
         if (difficulty < 0 || difficulty > 2) {
             Log.d("MultiSweeper", "onCreate in SinglePlayerActivity. Invalid difficulty");

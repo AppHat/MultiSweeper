@@ -71,29 +71,19 @@ public class TileButton extends Button {
     private void normalize() {
         this.setEnabled(true);
         this.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
-        this.setPadding(0, 0, 0, 0);
         this.setTypeface(null, Typeface.NORMAL);
         this.setTextColor(Color.WHITE);
         this.setText("");
-        //this.setBackgroundResource(R.drawable.btn_default_holo_dark);
-        this.setBackgroundResourceKeepPadding(R.drawable.btn_default_holo_dark);
-    }
-
-    private void setBackgroundResourceKeepPadding(int resource){
-        int bottom = this.getPaddingBottom();
-        int top = this.getPaddingTop();
-        int right = this.getPaddingRight();
-        int left = this.getPaddingLeft();
-        this.setBackgroundResource(resource);
-        this.setPadding(left, top, right, bottom);
+        this.setBackgroundResource(R.drawable.btn_default_holo_dark);
+        this.setPadding(0, 0, 0, 0);
     }
 
     private void displayNumber() {
         if (surrounding_mines == 0) {
             this.setEnabled(false);
         } else {
-            //this.setBackgroundResource(R.drawable.btn_default_disabled_holo_dark);
-            this.setBackgroundResourceKeepPadding(R.drawable.btn_default_disabled_holo_dark);
+            this.setBackgroundResource(R.drawable.btn_default_disabled_holo_dark);
+            this.setPadding(0, 0, 0, 0);
             this.setText(Integer.toString(surrounding_mines));
             this.setTextColor(textColors[surrounding_mines - 1]);
         }
