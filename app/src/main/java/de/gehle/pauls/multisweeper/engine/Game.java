@@ -11,8 +11,9 @@ import java.util.Random;
 public class Game {
 
     public static final String KEY_DIFFICULTY = "de.gehle.pauls.multisweeper.difficulty";
+    public static final String KEY_SAVEGAME = "de.gehle.pauls.multisweeper.save_game";
 
-    private final class Difficulty {
+    public static final class Difficulty {
         public int rows;
         public int cols;
         public int mines;
@@ -24,7 +25,14 @@ public class Game {
         }
     }
 
+    final static Difficulty[] difficulties = {
+            new Difficulty(10, 10, 10),
+            new Difficulty(16, 16, 40),
+            new Difficulty(30, 16, 100)
+    };
+
     private Difficulty difficulty;
+    private int difficultyChosen;
 
     private MinesweeperObserver observer;
 
@@ -43,11 +51,7 @@ public class Game {
      */
     public Game(MinesweeperObserver observer, int difficulty) {
         this.observer = observer;
-        final Difficulty[] difficulties = {
-                new Difficulty(10, 10, 10),
-                new Difficulty(16, 16, 40),
-                new Difficulty(30, 16, 100)
-        };
+        difficultyChosen = difficulty;
         this.difficulty = difficulties[difficulty];
         timer = new Timer(observer);
         mineCounter = new MineCounter(observer, this.difficulty.mines);
@@ -70,6 +74,10 @@ public class Game {
         score.reset();
         gameBoard.setupMineField(difficulty.rows, difficulty.cols, difficulty.mines);
         setGameOver(false);
+    }
+
+    public int getTimeInSeconds() {
+        return timer.getSecondsPassed();
     }
 
     public void endGame() {
@@ -112,6 +120,11 @@ public class Game {
         }
     }
 
+    public boolean isRunning() {
+        //Timer is also false if game has ended
+        return timer.hasStarted();
+    }
+
     private void init(int row, int col) {
         if (!timer.hasStarted()) {
             timer.start();
@@ -124,6 +137,23 @@ public class Game {
         gameBoard.setTiles(tiles);
     }
 
+    public void continueGame(Tile[][] tiles, int timeInSeconds) {
+        start(1);
+        gameBoard.loadTiles(tiles);
+
+        for (int row = 0; row < tiles.length; row++) {
+            for (int col = 0; col < tiles[0].length; col++) {
+                if (tiles[row][col].getState() == Tile.TileState.FLAG) {
+                    mineCounter.dec();
+                }
+
+            }
+        }
+
+        timer.setSecondsPassed(timeInSeconds);
+        timer.start();
+    }
+
     public int getRows() {
         return difficulty.rows;
     }
@@ -134,6 +164,10 @@ public class Game {
 
     public Tile getTile(int row, int col) {
         return gameBoard.getTile(row, col);
+    }
+
+    public Tile[][] getTiles() {
+        return gameBoard.getTiles();
     }
 
     public int getScore(int playerId) {
@@ -151,12 +185,17 @@ public class Game {
     public int getNrOfPlayers() {
         return nrOfPlayers;
     }
+
+    public int getDifficulty() {
+        return difficultyChosen;
+    }
 }
 
 /**
  * GameBoard
  */
 class GameBoard {
+    private static final String TAG = "GameEngine";
     private MinesweeperObserver observer;
     private boolean hitMine;
 
@@ -216,6 +255,26 @@ class GameBoard {
              * Refresh surrounding mines counters
              */
             handleSurroundingTiles(mineRow, mineCol, Action.UPDATE_SURROUNDING_MINE_COUNT);
+        }
+    }
+
+    public void loadTiles(Tile[][] tiles) {
+        this.tiles = tiles;
+
+        for (int row = 0; row < totalRows; row++) {
+            for (int col = 0; col < totalCols; col++) {
+
+                if (tiles[row][col].isMine()) {
+                    handleSurroundingTiles(row, col, Action.UPDATE_SURROUNDING_MINE_COUNT);
+                } else if (tiles[row][col].getState() == Tile.TileState.NUMBER) {
+                    --coveredFields;
+                }
+
+                if (tiles[row][col].getState() == Tile.TileState.FLAG) {
+                    handleSurroundingTiles(row, col, Action.INC_SURROUNDING_FLAGS_COUNT);
+                }
+
+            }
         }
     }
 
@@ -456,10 +515,8 @@ class Timer {
     }
 
     public void start() {
-        if (secondsPassed == 0) {
-            timer.removeCallbacks(updateTimer);
-            timer.postDelayed(updateTimer, 1000);
-        }
+        timer.removeCallbacks(updateTimer);
+        timer.postDelayed(updateTimer, 1000);
         timerStarted = true;
     }
 
@@ -479,6 +536,11 @@ class Timer {
 
     public int getSecondsPassed() {
         return secondsPassed;
+    }
+
+    public void setSecondsPassed(int seconds) {
+        secondsPassed = seconds;
+        observer.updateTimer(secondsPassed);
     }
 }
 

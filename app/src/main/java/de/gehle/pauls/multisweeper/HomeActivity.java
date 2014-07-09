@@ -11,6 +11,8 @@ import android.view.View;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.games.Games;
+import com.google.android.gms.games.snapshot.SnapshotMetadata;
+import com.google.android.gms.games.snapshot.Snapshots;
 import com.google.example.games.basegameutils.BaseGameActivity;
 
 import de.gehle.pauls.multisweeper.engine.Game;
@@ -21,6 +23,11 @@ import static com.google.android.gms.common.GooglePlayServicesUtil.isGooglePlayS
 public class HomeActivity extends BaseGameActivity {
 
     private static final int REQUEST_LEADERBOARD = 0;
+    private static final String TAG = "HOME";
+
+    public HomeActivity() {
+        super(BaseGameActivity.CLIENT_GAMES | BaseGameActivity.CLIENT_SNAPSHOT);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,7 +76,28 @@ public class HomeActivity extends BaseGameActivity {
         startActivity(intent);
     }
 
+    private void startNewGame(String currentSaveName) {
+        Intent intent = new Intent(this, SinglePlayerActivity.class);
+        intent.putExtra(Game.KEY_SAVEGAME, currentSaveName);
+        startActivity(intent);
+    }
+
     public void continueGame(View view) {
+        Intent savedGamesIntent = Games.Snapshots.getSelectSnapshotIntent(this.getApiClient(), "Game to continue", false, false, 1);
+        startActivityForResult(savedGamesIntent, 0);
+    }
+
+    /**
+     * After you start the intent to select a snapshot, this callback
+     * will be triggered.
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        if (intent != null && intent.hasExtra(Snapshots.EXTRA_SNAPSHOT_METADATA)) {
+            SnapshotMetadata snapshotMetadata = (SnapshotMetadata) intent.getParcelableExtra(Snapshots.EXTRA_SNAPSHOT_METADATA);
+            String currentSaveName = snapshotMetadata.getUniqueName();
+            startNewGame(currentSaveName);
+        }
     }
 
     public void multiplayer(View view) {

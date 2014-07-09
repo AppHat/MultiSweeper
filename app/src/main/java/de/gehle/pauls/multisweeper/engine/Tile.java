@@ -1,8 +1,14 @@
 package de.gehle.pauls.multisweeper.engine;
 
 
+import android.util.Log;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class Tile{
 
+    private static final String TAG = "Tile";
     private MinesweeperObserver observer;
 
     public enum TileState {
@@ -165,6 +171,57 @@ public class Tile{
 
         if (isMine) {
             tile.putMine();
+        }
+
+        return tile;
+    }
+
+    @Override
+    public String toString() {
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("row", row);
+            obj.put("col", col);
+            obj.put("isMine", realState == TileState.MINE);
+            obj.put("isFlag", shownState == TileState.FLAG);
+            obj.put("isQuestionMark", shownState == TileState.UNKNOWN);
+            obj.put("isCovered", shownState != TileState.NUMBER);
+            return obj.toString();
+        } catch (JSONException ex) {
+            ex.printStackTrace();
+            throw new RuntimeException("Error converting save data to JSON.", ex);
+        }
+    }
+
+    public static Tile loadFromJson(String json, MinesweeperObserver observer) {
+        if (json == null || json.trim().equals("")) return null;
+
+        Tile tile = null;
+
+        try {
+            JSONObject obj = new JSONObject(json);
+            int row = obj.getInt("row");
+            int col = obj.getInt("col");
+
+            tile = new Tile(observer, row, col);
+
+            if (obj.getBoolean("isMine")) {
+                tile.putMine();
+            }
+
+            if (obj.getBoolean("isFlag")) {
+                tile.shownState = TileState.FLAG;
+            } else if (obj.getBoolean("isQuestionMark")) {
+                tile.shownState = TileState.UNKNOWN;
+            } else if (!obj.getBoolean("isCovered")) {
+                tile.shownState = TileState.NUMBER;
+            }
+        } catch (JSONException ex) {
+            ex.printStackTrace();
+            Log.e(TAG, "Save data has a syntax error: " + json, ex);
+        } catch (NumberFormatException ex) {
+            ex.printStackTrace();
+            throw new RuntimeException("Save data has an invalid number in it: " + json, ex);
         }
 
         return tile;

@@ -35,6 +35,14 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
     //private ImageButton imageButton;
     protected TileButton[][] tileButtons;
 
+    public GameActivity() {
+        super();
+    }
+
+    protected GameActivity(int requestedClients) {
+        super(requestedClients);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -203,7 +211,7 @@ public abstract class GameActivity extends BaseGameActivity implements Minesweep
         }
     }
 
-    private void showGameState() {
+    protected void showGameState() {
         for (int i = 0; i < game.getRows(); ++i) {
             for (int j = 0; j < game.getCols(); ++j) {
                 updateTile(i, j);
