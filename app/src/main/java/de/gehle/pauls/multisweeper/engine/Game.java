@@ -71,7 +71,6 @@ public class Game {
         // need to create a new score object, since the number of players might be different from
         // previous time
         this.score = new Score(nrOfPlayers);
-        score.reset();
         gameBoard.setupMineField(difficulty.rows, difficulty.cols, difficulty.mines);
         setGameOver(false);
     }
@@ -405,8 +404,6 @@ class Score {
     private Integer[] score;
 
     /**
-     * Constructor for more than 1 players
-     *
      * @param nrOfPlayers number of players to save score for
      */
     Score(int nrOfPlayers) {
@@ -429,7 +426,7 @@ class Score {
     public int getFinalScore(int playerId, int fieldSize, int mines, int time) {
         final int uncoveredFieldsFactor = 1;
         final int minesFactor = 2;
-        final int timeFactor = 10;
+        final int timeFactor = 1000;
 
         if (!inBounds(playerId)) {
             // TODO throw an exception
@@ -450,7 +447,7 @@ class Score {
         if (score[playerId] > 0) {
             return uncoveredFieldsFactor * score[playerId] +
                     minesFactor * minedensity +
-                    timeFactor * seconds;
+                    (timeFactor/seconds);
         } else {
             return 0;
         }

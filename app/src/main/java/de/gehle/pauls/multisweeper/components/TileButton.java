@@ -113,7 +113,9 @@ public class TileButton extends Button {
     private void displayBadFlag() {
         this.setEnabled(false);
         this.setText(Integer.toString(surrounding_mines));
-        this.setTextColor(textColors[surrounding_mines - 1]);
+        if(surrounding_mines > 0) {
+            this.setTextColor(textColors[surrounding_mines - 1]);
+        }
         Drawable image = getResources().getDrawable(R.drawable.badflag_player1);
         image.setBounds(0, 0, 45, 45);
         this.setPadding(8, 0, 0, 0);
