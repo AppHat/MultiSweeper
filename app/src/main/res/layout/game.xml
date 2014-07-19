@@ -37,7 +37,7 @@
         <TextView
             android:id="@+id/Timer"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
             android:text="@string/timer"
@@ -47,7 +47,7 @@
         <TextView
             android:id="@+id/MineCount"
             android:layout_width="0dp"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
             android:text="@string/timer"
@@ -55,24 +55,31 @@
             android:textSize="35sp" />
     </LinearLayout>
 
-    <ScrollView
-        android:id="@+id/layout"
+    <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
+        android:layout_gravity="center"
         android:background="@color/game_board"
-        android:scrollbarStyle="insideOverlay"
-        android:scrollbars="vertical|horizontal">
+        android:gravity="center">
 
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+        <ScrollView
+            android:id="@+id/layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:scrollbarStyle="insideOverlay"
+            android:scrollbars="vertical|horizontal">
 
-            <TableLayout
-                android:id="@+id/MineField"
+            <HorizontalScrollView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center" />
-        </HorizontalScrollView>
-    </ScrollView>
+                android:gravity="center">
+
+                <TableLayout
+                    android:id="@+id/MineField"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </HorizontalScrollView>
+        </ScrollView>
+    </LinearLayout>
 
 </LinearLayout>
