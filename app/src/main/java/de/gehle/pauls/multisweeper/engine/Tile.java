@@ -68,10 +68,11 @@ public class Tile{
     }
 
     public void gameOver() {
-        if (shownState == TileState.FLAG &&
-                realState != TileState.MINE) {
+        if (shownState == TileState.FLAG) {
+            if (realState != TileState.MINE) {
                 shownState = TileState.BAD_FLAG;
-            observer.updateTile(row, col);
+                observer.updateTile(row, col);
+            }
             return;
         }
         if(shownState == TileState.EXPLODED_MINE){
