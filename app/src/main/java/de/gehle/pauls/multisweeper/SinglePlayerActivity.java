@@ -31,6 +31,7 @@ public class SinglePlayerActivity extends GameActivity {
     private static final String TAG = "SINGLE";
     private static final int MAX_SNAPSHOT_RESOLVE_RETRIES = 3;
     private static String defaultSaveGameName = "continueSnapshot";
+    private boolean loggedIn = false;
 
     public SinglePlayerActivity() {
         super(BaseGameActivity.CLIENT_GAMES | BaseGameActivity.CLIENT_SNAPSHOT);
@@ -45,10 +46,18 @@ public class SinglePlayerActivity extends GameActivity {
     @Override
     protected void onStop() {
         //Also false if game ended
-        if (game.isRunning()) {
+        /*
+        if (game.isRunning() && loggedIn) {
             Log.d(TAG, "Saving game!");
+            ProgressDialog progress = new ProgressDialog(this);
+            progress.setTitle("Loading");
+            progress.setMessage("Wait while loading...");
+            progress.show();
             saveSnapshot(new SaveGame(game));
+            progress.dismiss();
         }
+        loggedIn = false;
+        */
         super.onStop();
     }
 
@@ -113,6 +122,12 @@ public class SinglePlayerActivity extends GameActivity {
         int id = item.getItemId();
         if (id == R.id.action_new) {
             resetGame();
+        } else if (id == android.R.id.home) {
+            //Also false if game ended
+            if (game.isRunning()) {
+                Log.d(TAG, "Saving game!");
+                saveSnapshot(new SaveGame(game));
+            }
         }
 
         return super.onOptionsItemSelected(item);
@@ -120,11 +135,13 @@ public class SinglePlayerActivity extends GameActivity {
 
     @Override
     public void onSignInFailed() {
+        loggedIn = false;
         startGame();
     }
 
     @Override
     public void onSignInSucceeded() {
+        loggedIn = true;
         Intent intent = getIntent();
         String saveGameName = intent.getStringExtra(Game.KEY_SAVEGAME);
         if (saveGameName != null) {
@@ -143,6 +160,7 @@ public class SinglePlayerActivity extends GameActivity {
      * Prepares saving Snapshot to the user's synchronized storage, conditionally resolves errors,
      * and stores the Snapshot.
      */
+
     void saveSnapshot(SaveGame saveGame) {
         final byte[] saveGameData = saveGame.toBytes();
         Log.d(TAG, saveGame.toString());
