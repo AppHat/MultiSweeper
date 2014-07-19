@@ -97,9 +97,15 @@ public class TileButton extends Button {
     }
 
     private void displayUnknown() {
+        /*
         this.setText("?");
         this.setTextColor(Color.parseColor("#00d9ff"));
         this.setTypeface(null, Typeface.BOLD);
+        */
+        Drawable image = getResources().getDrawable(R.drawable.question_mark);
+        image.setBounds(0, 0, 45, 45);
+        this.setPadding(10, 0, 0, 0);
+        this.setCompoundDrawables(image, null, null, null);
     }
 
     private void displayMine() {

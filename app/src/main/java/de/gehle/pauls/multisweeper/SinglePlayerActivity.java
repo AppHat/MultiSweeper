@@ -42,6 +42,16 @@ public class SinglePlayerActivity extends GameActivity {
         bindGameLayout();
     }
 
+    @Override
+    protected void onStop() {
+        //Also false if game ended
+        if (game.isRunning()) {
+            Log.d(TAG, "Saving game!");
+            saveSnapshot(new SaveGame(game));
+        }
+        super.onStop();
+    }
+
     private void loadSaveGame(String saveGameName) {
         Log.i(TAG, "Opening snapshot " + saveGameName);
 
@@ -103,13 +113,8 @@ public class SinglePlayerActivity extends GameActivity {
         int id = item.getItemId();
         if (id == R.id.action_new) {
             resetGame();
-        } else if (id == android.R.id.home) {
-            //Also false if game ended
-            if (game.isRunning()) {
-                Log.d(TAG, "Saving game!");
-                saveSnapshot(new SaveGame(game));
-            }
         }
+
         return super.onOptionsItemSelected(item);
     }
 
