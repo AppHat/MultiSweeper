@@ -1,7 +1,9 @@
 package de.gehle.pauls.multisweeper;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -49,12 +51,7 @@ public class SinglePlayerActivity extends GameActivity {
         /*
         if (game.isRunning() && loggedIn) {
             Log.d(TAG, "Saving game!");
-            ProgressDialog progress = new ProgressDialog(this);
-            progress.setTitle("Loading");
-            progress.setMessage("Wait while loading...");
-            progress.show();
             saveSnapshot(new SaveGame(game));
-            progress.dismiss();
         }
         loggedIn = false;
         */
@@ -126,7 +123,14 @@ public class SinglePlayerActivity extends GameActivity {
             //Also false if game ended
             if (game.isRunning()) {
                 Log.d(TAG, "Saving game!");
+                ProgressDialog progress = new ProgressDialog(this);
+                progress.setTitle("Loading");
+                progress.setMessage("Wait while loading...");
+                progress.show();
+
                 saveSnapshot(new SaveGame(game));
+
+                progress.dismiss();
             }
         }
 
@@ -198,10 +202,15 @@ public class SinglePlayerActivity extends GameActivity {
         snapshot.writeBytes(saveGame);
 
         // Save the snapshot.
-        SnapshotMetadataChange metadataChange = new SnapshotMetadataChange.Builder()
-                //.setCoverImage(getScreenShot())
-                .setDescription("Modified data at: " + Calendar.getInstance().getTime())
-                .build();
+        SnapshotMetadataChange.Builder metadataChangeBuilder = new SnapshotMetadataChange.Builder()
+                .setDescription("Modified data at: " + Calendar.getInstance().getTime());
+
+        Bitmap screenshot = getScreenShot();
+        if (screenshot != null) {
+            metadataChangeBuilder.setCoverImage(screenshot);
+        }
+
+        SnapshotMetadataChange metadataChange = metadataChangeBuilder.build();
         GoogleApiClient api = this.getApiClient();
         Games.Snapshots.commitAndClose(api, snapshot, metadataChange);
         return snapshot.toString();
@@ -216,15 +225,17 @@ public class SinglePlayerActivity extends GameActivity {
         TableLayout root = (TableLayout) findViewById(R.id.MineField);
         Bitmap coverImage;
         try {
-            root.setDrawingCacheEnabled(true);
-            Bitmap base = root.getDrawingCache();
-            coverImage = base.copy(base.getConfig(), false /* isMutable */);
+            coverImage = Bitmap.createBitmap(root.getWidth(), root.getHeight(), Bitmap.Config.ARGB_8888);
+            Canvas c = new Canvas(coverImage);
+            root.layout(0, 0, root.getLayoutParams().width, root.getLayoutParams().height);
+            root.draw(c);
         } catch (Exception ex) {
             Log.d(TAG, "Failed to create a screenshot", ex);
             coverImage = null;
         } finally {
             root.setDrawingCacheEnabled(false);
         }
+
         return coverImage;
     }
 
