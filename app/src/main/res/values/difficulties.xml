@@ -1,6 +1,12 @@
 <resources>
+    <array name="difficulties">
+        <item>@array/easy</item>
+        <item>@array/medium</item>
+        <item>@array/hard</item>
+    </array>
+
     <!--
-    <array name="difficulty.formatExample">
+    <array name="difficultyExample">
         <item>rows</item>
         <item>cols</item>
         <item>mines</item>
@@ -9,16 +15,16 @@
     <integer-array name="easy">
         <item>10</item>
         <item>10</item>
-        <item>22</item>
+        <item>10</item>
     </integer-array>
     <integer-array name="medium">
         <item>16</item>
         <item>16</item>
-        <item>56</item>
+        <item>40</item>
     </integer-array>
     <integer-array name="hard">
         <item>30</item>
         <item>16</item>
-        <item>105</item>
+        <item>100</item>
     </integer-array>
 </resources>

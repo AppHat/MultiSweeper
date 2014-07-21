@@ -1,17 +1,11 @@
 package de.gehle.pauls.multisweeper.engine;
 
 /**
- * Created by dima on 25.06.2014.
+ * @author Dima
  */
-public interface MinesweeperObserver {
+public interface MinesweeperObserver extends Timer.TimerObserver, Counter.CounterObserver {
 
     public void updateTile(int row, int col);
 
-    public void updateTimer(int secondsPassed);
-
-    public void updateMineCounter(int mineCounter);
-
-    public void onGameStateChanged(boolean newState);
-
-    public void onInitGameBoard(Tile[][] tiles);
+    public void onGameStateChanged(Game.GameState newState);
 }

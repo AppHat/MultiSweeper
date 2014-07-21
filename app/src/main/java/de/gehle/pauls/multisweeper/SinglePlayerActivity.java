@@ -12,7 +12,6 @@ import android.view.MenuItem;
 import android.widget.TableLayout;
 import android.widget.Toast;
 
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.GamesStatusCodes;
 import com.google.android.gms.games.snapshot.Snapshot;
@@ -23,17 +22,19 @@ import com.google.example.games.basegameutils.BaseGameActivity;
 import java.util.Calendar;
 import java.util.concurrent.ExecutionException;
 
+import de.gehle.pauls.multisweeper.components.AbstractGameActivity;
 import de.gehle.pauls.multisweeper.engine.Game;
 import de.gehle.pauls.multisweeper.engine.MinesweeperObserver;
-import de.gehle.pauls.multisweeper.engine.SaveGame;
-import de.gehle.pauls.multisweeper.engine.Tile;
 
-public class SinglePlayerActivity extends GameActivity {
+public class SinglePlayerActivity extends AbstractGameActivity {
 
     private static final String TAG = "SINGLE";
+
     private static final int MAX_SNAPSHOT_RESOLVE_RETRIES = 3;
-    private static String defaultSaveGameName = "continueSnapshot";
+    private static final String defaultSaveGameName = "continueSnapshot";
+
     private boolean loggedIn = false;
+    private String loadSaveGameName = null;
 
     public SinglePlayerActivity() {
         super(BaseGameActivity.CLIENT_GAMES | BaseGameActivity.CLIENT_SNAPSHOT);
@@ -42,12 +43,25 @@ public class SinglePlayerActivity extends GameActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        bindGameLayout();
+
+        Intent intent = getIntent();
+        String saveGameName = intent.getStringExtra(Game.KEY_SAVEGAME);
+        if (saveGameName != null) {
+            if (loggedIn) {
+                loadSaveGame(saveGameName);
+            } else {
+                //To see the game, but not yet started or init
+                bindGameLayout();
+                loadSaveGameName = saveGameName;
+            }
+        } else {
+            startGame(1);
+        }
     }
 
     @Override
     protected void onStop() {
-        //Also false if game ended
+        //TODO:Uncomment cause: Better way to save games also on crash but: Donno y, but ggs is disconnected here before saving. But super onStop is called later... :/
         /*
         if (game.isRunning() && loggedIn) {
             Log.d(TAG, "Saving game!");
@@ -56,52 +70,6 @@ public class SinglePlayerActivity extends GameActivity {
         loggedIn = false;
         */
         super.onStop();
-    }
-
-    private void loadSaveGame(String saveGameName) {
-        Log.i(TAG, "Opening snapshot " + saveGameName);
-
-        final String finalSaveGameName = saveGameName;
-        final MinesweeperObserver observer = this;
-
-        AsyncTask<Void, Void, Integer> task = new AsyncTask<Void, Void, Integer>() {
-
-            SaveGame s;
-
-            @Override
-            protected Integer doInBackground(Void... params) {
-                // Open the saved game using its name.
-                Snapshots.OpenSnapshotResult result = Games.Snapshots.open(getApiClient(), finalSaveGameName, true).await();
-                int status = result.getStatus().getStatusCode();
-
-                if (status == GamesStatusCodes.STATUS_OK) {
-                    Snapshot snapshot = result.getSnapshot();
-                    // Read the byte content of the saved game.
-                    s = new SaveGame(snapshot.readFully(), observer);
-                } else {
-                    Log.e(TAG, "Error while loading: " + status);
-                }
-
-                return status;
-            }
-
-            @Override
-            protected void onPostExecute(Integer status) {
-                // Reflect the changes in the UI.
-                Log.d(TAG, s.toString());
-                startGame(s);
-            }
-        };
-
-        task.execute();
-    }
-
-    protected void startGame(SaveGame saveGame) {
-        initButtons();
-        game = new Game(this, saveGame.getDifficulty());
-        game.continueGame(saveGame.getTiles(), saveGame.getTimeInSeconds());
-        showGameState();
-        Log.d("Multisweeper", "Game loaded!");
     }
 
     @Override
@@ -128,7 +96,7 @@ public class SinglePlayerActivity extends GameActivity {
                 progress.setMessage("Wait while loading...");
                 progress.show();
 
-                saveSnapshot(new SaveGame(game));
+                saveSnapshot(game);
 
                 progress.dismiss();
             }
@@ -140,47 +108,44 @@ public class SinglePlayerActivity extends GameActivity {
     @Override
     public void onSignInFailed() {
         loggedIn = false;
-        startGame();
+        startGame(1);
     }
 
     @Override
     public void onSignInSucceeded() {
         loggedIn = true;
-        Intent intent = getIntent();
-        String saveGameName = intent.getStringExtra(Game.KEY_SAVEGAME);
-        if (saveGameName != null) {
-            loadSaveGame(saveGameName);
-        } else {
-            startGame();
+        if (loadSaveGameName != null) {
+            loadSaveGame(loadSaveGameName);
+            loadSaveGameName = null;
         }
     }
 
-    @Override
-    public void onInitGameBoard(Tile[][] tiles) {
 
-    }
+    /**
+     * ============================================================
+     * For save games
+     * ============================================================
+     */
 
     /**
      * Prepares saving Snapshot to the user's synchronized storage, conditionally resolves errors,
      * and stores the Snapshot.
      */
-
-    void saveSnapshot(SaveGame saveGame) {
+    void saveSnapshot(Game saveGame) {
         final byte[] saveGameData = saveGame.toBytes();
         Log.d(TAG, saveGame.toString());
 
         AsyncTask<Void, Void, Snapshots.OpenSnapshotResult> task = new AsyncTask<Void, Void, Snapshots.OpenSnapshotResult>() {
             @Override
             protected Snapshots.OpenSnapshotResult doInBackground(Void... params) {
-                Snapshots.OpenSnapshotResult result = Games.Snapshots.open(getApiClient(), defaultSaveGameName, true).await();
-                return result;
+                return Games.Snapshots.open(getApiClient(), defaultSaveGameName, true).await();
             }
 
             @Override
             protected void onPostExecute(Snapshots.OpenSnapshotResult result) {
                 Snapshot toWrite = processSnapshotOpenResult(result, 0);
 
-                Log.d(TAG, writeSnapshot(toWrite, saveGameData));
+                writeSnapshot(toWrite, saveGameData);
             }
         };
 
@@ -197,7 +162,7 @@ public class SinglePlayerActivity extends GameActivity {
      * Generates metadata, takes a screenshot, and performs the write operation for saving a
      * snapshot.
      */
-    private String writeSnapshot(Snapshot snapshot, byte[] saveGame) {
+    private void writeSnapshot(Snapshot snapshot, byte[] saveGame) {
         // Set the data payload for the snapshot.
         snapshot.writeBytes(saveGame);
 
@@ -211,9 +176,7 @@ public class SinglePlayerActivity extends GameActivity {
         }
 
         SnapshotMetadataChange metadataChange = metadataChangeBuilder.build();
-        GoogleApiClient api = this.getApiClient();
-        Games.Snapshots.commitAndClose(api, snapshot, metadataChange);
-        return snapshot.toString();
+        Games.Snapshots.commitAndClose(getApiClient(), snapshot, metadataChange);
     }
 
     /**
@@ -246,7 +209,7 @@ public class SinglePlayerActivity extends GameActivity {
      * @return The opened Snapshot on success; otherwise, returns null.
      */
     Snapshot processSnapshotOpenResult(Snapshots.OpenSnapshotResult result, int retryCount) {
-        Snapshot mResolvedSnapshot = null;
+        Snapshot mResolvedSnapshot;
         retryCount++;
         int status = result.getStatus().getStatusCode();
 
@@ -268,9 +231,7 @@ public class SinglePlayerActivity extends GameActivity {
                 mResolvedSnapshot = conflictSnapshot;
             }
 
-            Snapshots.OpenSnapshotResult resolveResult = Games.Snapshots.resolveConflict(
-                    getApiClient(), result.getConflictId(), mResolvedSnapshot)
-                    .await();
+            Snapshots.OpenSnapshotResult resolveResult = Games.Snapshots.resolveConflict(getApiClient(), result.getConflictId(), mResolvedSnapshot).await();
 
             if (retryCount < MAX_SNAPSHOT_RESOLVE_RETRIES) {
                 return processSnapshotOpenResult(resolveResult, retryCount);
@@ -285,5 +246,39 @@ public class SinglePlayerActivity extends GameActivity {
         return null;
     }
 
+    private void loadSaveGame(String saveGameName) {
+        Log.i(TAG, "Opening snapshot " + saveGameName);
 
+        final String finalSaveGameName = saveGameName;
+        final MinesweeperObserver observer = this;
+
+        AsyncTask<Void, Void, Integer> task = new AsyncTask<Void, Void, Integer>() {
+
+            @Override
+            protected Integer doInBackground(Void... params) {
+                // Open the saved game using its name.
+                Snapshots.OpenSnapshotResult result = Games.Snapshots.open(getApiClient(), finalSaveGameName, true).await();
+                int status = result.getStatus().getStatusCode();
+
+                if (status == GamesStatusCodes.STATUS_OK) {
+                    Snapshot snapshot = result.getSnapshot();
+                    // Read the byte content of the saved game.
+                    game = new Game(observer, snapshot.readFully());
+                } else {
+                    Log.e(TAG, "Error while loading: " + status);
+                }
+
+                return status;
+            }
+
+            @Override
+            protected void onPostExecute(Integer status) {
+                Log.d("Multisweeper", "Game loaded!");
+                initButtons();
+                showGameState();
+            }
+        };
+
+        task.execute();
+    }
 }

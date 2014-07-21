@@ -94,7 +94,7 @@ public class HomeActivity extends BaseGameActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         if (intent != null && intent.hasExtra(Snapshots.EXTRA_SNAPSHOT_METADATA)) {
-            SnapshotMetadata snapshotMetadata = (SnapshotMetadata) intent.getParcelableExtra(Snapshots.EXTRA_SNAPSHOT_METADATA);
+            SnapshotMetadata snapshotMetadata = intent.getParcelableExtra(Snapshots.EXTRA_SNAPSHOT_METADATA);
             String currentSaveName = snapshotMetadata.getUniqueName();
             startNewGame(currentSaveName);
         }

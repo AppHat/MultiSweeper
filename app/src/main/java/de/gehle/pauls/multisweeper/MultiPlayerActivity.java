@@ -1,40 +1,24 @@
 package de.gehle.pauls.multisweeper;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 
-import com.google.android.gms.games.Games;
-import com.google.android.gms.games.GamesActivityResultCodes;
-import com.google.android.gms.games.GamesStatusCodes;
-import com.google.android.gms.games.multiplayer.Invitation;
-import com.google.android.gms.games.multiplayer.Multiplayer;
-import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
 import com.google.android.gms.games.multiplayer.Participant;
 import com.google.android.gms.games.multiplayer.realtime.RealTimeMessage;
-import com.google.android.gms.games.multiplayer.realtime.RealTimeMessageReceivedListener;
 import com.google.android.gms.games.multiplayer.realtime.Room;
-import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
-import com.google.android.gms.games.multiplayer.realtime.RoomStatusUpdateListener;
-import com.google.android.gms.games.multiplayer.realtime.RoomUpdateListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
-import de.gehle.pauls.multisweeper.engine.Tile;
+import de.gehle.pauls.multisweeper.components.AbstractMultiPlayerActivity;
+import de.gehle.pauls.multisweeper.engine.Game;
+import de.gehle.pauls.multisweeper.engine.GameBoard;
 
-public class MultiPlayerActivity
-        extends GameActivity
-        implements OnInvitationReceivedListener,
-                   RoomUpdateListener,
-                   RealTimeMessageReceivedListener,
-                   RoomStatusUpdateListener {
+public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
 
     private static final String TAG = "Multiplayer";
 
@@ -60,12 +44,13 @@ public class MultiPlayerActivity
 
     private String mMyGoogleId = null;
 
+    //============================================================
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_multi_player);
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -83,42 +68,33 @@ public class MultiPlayerActivity
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * ============================================================
+     * Menu button binds
+     * ============================================================
+     */
+
     public void startQuickGame(View view) {
-        Bundle am = RoomConfig.createAutoMatchCriteria(MIN_OTHER_PLAYERS, MAX_OTHER_PLAYERS, 0);
-
-        // build the room config:
-        RoomConfig.Builder roomConfigBuilder = makeBasicRoomConfigBuilder();
-        roomConfigBuilder.setAutoMatchCriteria(am);
-        RoomConfig roomConfig = roomConfigBuilder.build();
-
-        // create room:
-        Games.RealTimeMultiplayer.create(getApiClient(), roomConfig);
-
-        // prevent screen from sleeping during handshake
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-        // go to game screen
-        startGame(mParticipants.size());
+        startQuickGameActivity();
     }
 
     public void invitePlayer(View view) {
-        Intent intent = Games.RealTimeMultiplayer.getSelectOpponentsIntent(getApiClient(), MIN_OTHER_PLAYERS, MAX_OTHER_PLAYERS);
-        startActivityForResult(intent, RC_SELECT_PLAYERS);
+        startSelectPlayersActivity();
     }
 
     public void invitationBox(View view) {
-        // launch the intent to show the invitation inbox screen
-        Intent intent = Games.Invitations.getInvitationInboxIntent(getApiClient());
-        startActivityForResult(intent, RC_INVITATION_INBOX);
+        startInvitationInboxActivity();
     }
 
-    @Override
-    protected void startGame(int nrOfPlayers) {
-        bindGameLayout();
-        super.startGame(nrOfPlayers);
-        mPlaying = true;
-    }
+    /**
+     * ============================================================
+     * Changes in game-logic to produce multiplayer mode
+     * ============================================================
+     */
 
+    /**
+     * Overrides ClickListeners to send the click also to all other players
+     */
     @Override
     protected void initButtons() {
         super.initButtons();
@@ -152,6 +128,25 @@ public class MultiPlayerActivity
         }
     }
 
+    @Override
+    public void onActivityResult(int request, int response, Intent data) {
+        super.onActivityResult(request, response, data);
+
+        //React on state changes ...
+    }
+
+    @Override
+    protected boolean shouldCancelGame(Room room) {
+        //TODO: Impl.
+        return false;
+    }
+
+    /**
+     * ============================================================
+     * Real time messages
+     * ============================================================
+     */
+
     private void sendOnClick(int row, int col) {
         byte[] message = new byte[3];
 
@@ -174,214 +169,6 @@ public class MultiPlayerActivity
         Log.d(TAG, "Sending onLongClick with " + row + "," + col);
     }
 
-    private void broadcast(byte[] message){
-        for (Participant p : mParticipants) {
-            if (!p.getParticipantId().equals(mMyGoogleId)) {
-                sendMessage(p.getParticipantId(), message);
-            }
-        }
-    }
-
-    private void sendMessage(String id, byte[] message){
-        Games.RealTimeMultiplayer.sendReliableMessage(getApiClient(), null, message, mRoomId, id);
-    }
-
-    @Override
-    public void onSignInFailed() {
-        Log.d(TAG, "Sign-in failed.");
-    }
-
-    @Override
-    public void onSignInSucceeded() {
-        Log.d(TAG, "Sign-in succeeded.");
-
-        // register listener so we are notified if we receive an invitation to play
-        // while we are in the game
-        Games.Invitations.registerInvitationListener(getApiClient(), this);
-
-        // if we received an invite via notification, accept it; otherwise, go to main screen
-        if (getInvitationId() != null) {
-            RoomConfig.Builder roomConfigBuilder = makeBasicRoomConfigBuilder();
-            roomConfigBuilder.setInvitationIdToAccept(getInvitationId());
-            Games.RealTimeMultiplayer.join(getApiClient(), roomConfigBuilder.build());
-
-            // prevent screen from sleeping during handshake
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-            // go to game screen
-            startGame(mParticipants.size());
-        }
-    }
-
-    @Override
-    public void onActivityResult(int request, int response, Intent data) {
-        if (request == RC_WAITING_ROOM) {
-            // ignore response code if the waiting room was dismissed from code:
-            if (mWaitingRoomFinishedFromCode) return;
-
-            if (response == Activity.RESULT_OK) {
-                // (start game)
-                startGame(mParticipants.size());
-            } else if (response == Activity.RESULT_CANCELED) {
-                // Waiting room was dismissed with the back button. The meaning of this
-                // action is up to the game. You may choose to leave the room and cancel the
-                // match, or do something else like minimize the waiting room and
-                // continue to connect in the background.
-
-                // in this example, we take the simple approach and just leave the room:
-                Games.RealTimeMultiplayer.leave(getApiClient(), this, mRoomId);
-                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-            } else if (response == GamesActivityResultCodes.RESULT_LEFT_ROOM) {
-                // player wants to leave the room.
-                Games.RealTimeMultiplayer.leave(getApiClient(), this, mRoomId);
-                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-            }
-        } else if (request == RC_SELECT_PLAYERS) {
-            if (response != Activity.RESULT_OK) {
-                // user canceled
-                return;
-            }
-
-            // get the invitee list
-            Bundle extras = data.getExtras();
-            final ArrayList<String> invitees =
-                    data.getStringArrayListExtra(Games.EXTRA_PLAYER_IDS);
-
-            // get auto-match criteria
-            Bundle autoMatchCriteria = null;
-            int minAutoMatchPlayers = data.getIntExtra(Multiplayer.EXTRA_MIN_AUTOMATCH_PLAYERS, 0);
-            int maxAutoMatchPlayers = data.getIntExtra(Multiplayer.EXTRA_MAX_AUTOMATCH_PLAYERS, 0);
-
-            if (minAutoMatchPlayers > 0) {
-                autoMatchCriteria = RoomConfig.createAutoMatchCriteria(minAutoMatchPlayers, maxAutoMatchPlayers, 0);
-            } else {
-                autoMatchCriteria = null;
-            }
-
-            // create the room and specify a variant if appropriate
-            RoomConfig.Builder roomConfigBuilder = makeBasicRoomConfigBuilder();
-            roomConfigBuilder.addPlayersToInvite(invitees);
-            if (autoMatchCriteria != null) {
-                roomConfigBuilder.setAutoMatchCriteria(autoMatchCriteria);
-            }
-            RoomConfig roomConfig = roomConfigBuilder.build();
-            Games.RealTimeMultiplayer.create(getApiClient(), roomConfig);
-
-            // prevent screen from sleeping during handshake
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        } else if (request == RC_INVITATION_INBOX) {
-            if (response != Activity.RESULT_OK) {
-                // canceled
-                return;
-            }
-
-            // get the selected invitation
-            Bundle extras = data.getExtras();
-            Invitation invitation = extras.getParcelable(Multiplayer.EXTRA_INVITATION);
-
-            // accept it!
-            RoomConfig roomConfig = makeBasicRoomConfigBuilder()
-                    .setInvitationIdToAccept(invitation.getInvitationId())
-                    .build();
-            Games.RealTimeMultiplayer.join(getApiClient(), roomConfig);
-
-            // prevent screen from sleeping during handshake
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-            // go to game screen
-            startGame(mParticipants.size());
-        }
-    }
-
-    // create a RoomConfigBuilder that's appropriate for your implementation
-    private RoomConfig.Builder makeBasicRoomConfigBuilder() {
-        return RoomConfig.builder(this)
-                .setMessageReceivedListener(this)
-                .setRoomStatusUpdateListener(this);
-    }
-
-    //=================================================
-
-    @Override
-    public void onInvitationReceived(Invitation invitation) {
-        // show in-game popup to let user know of pending invitation
-
-        // store invitation for use when player accepts this invitation
-        mIncomingInvitationId = invitation.getInvitationId();
-
-        /**
-         * If accept popup accept invatation:
-         * RoomConfig.Builder roomConfigBuilder = makeBasicRoomConfigBuilder();
-         roomConfigBuilder.setInvitationIdToAccept(mIncomingInvitationId);
-         Games.RealTimeMultiplayer.join(getApiClient(), roomConfigBuilder.build());
-
-         // prevent screen from sleeping during handshake
-         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-         // now, go to game screen
-         */
-    }
-
-    @Override
-    public void onInvitationRemoved(String s) {
-
-    }
-
-    //=================================================
-
-    @Override
-    public void onRoomCreated(int statusCode, Room room) {
-        if (statusCode != GamesStatusCodes.STATUS_OK) {
-            // let screen go to sleep
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-            // show error message, return to main screen.
-            return;
-        }
-
-        mRoomId = room.getRoomId();
-
-        // get waiting room intent
-        Intent i = Games.RealTimeMultiplayer.getWaitingRoomIntent(getApiClient(), room, Integer.MAX_VALUE);
-        startActivityForResult(i, RC_WAITING_ROOM);
-    }
-
-    @Override
-    public void onJoinedRoom(int statusCode, Room room) {
-        if (statusCode != GamesStatusCodes.STATUS_OK) {
-            // let screen go to sleep
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-            // show error message, return to main screen.
-            return;
-        }
-
-        mRoomId = room.getRoomId();
-
-        // get waiting room intent
-        Intent i = Games.RealTimeMultiplayer.getWaitingRoomIntent(getApiClient(), room, Integer.MAX_VALUE);
-        startActivityForResult(i, RC_WAITING_ROOM);
-    }
-
-    @Override
-    public void onLeftRoom(int i, String s) {
-        mRoomId = null;
-    }
-
-    @Override
-    public void onRoomConnected(int statusCode, Room room) {
-        if (statusCode != GamesStatusCodes.STATUS_OK) {
-            // let screen go to sleep
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-            // show error message, return to main screen.
-        }
-
-        updateRoom(room);
-    }
-
-    //=================================================
-
     /**
      * Received messages
      * <p/>
@@ -391,7 +178,7 @@ public class MultiPlayerActivity
      * [S] = Starting game (E.g. Creator of the room has clicked on play in the waiting room, so we should also switch to game screen and leave the waiting room)
      * [B] [Tile1Data1][Tile1Data2][Tile1Data3][Tile1Data4] [Tile2Data1][Tile2Data2].... = Board-sync
      *
-     * @param realTimeMessage
+     * @param realTimeMessage Real time message received
      */
     @Override
     public void onRealTimeMessageReceived(RealTimeMessage realTimeMessage) {
@@ -406,20 +193,14 @@ public class MultiPlayerActivity
             mWaitingRoomFinishedFromCode = true;
             finishActivity(RC_WAITING_ROOM);
             startGame(mParticipants.size());
+
         } else if (action == 'B') {
-            Tile[][] tiles = new Tile[game.getRows()][game.getCols()];
-
-            for (int i = 1; i < buf.length; i += 4) {
-                byte[] data = new byte[4];
-                data[0] = buf[i];
-                data[1] = buf[i + 1];
-                data[2] = buf[i + 2];
-                data[3] = buf[i + 3];
-                Tile newTile = Tile.deserialize(data, this);
-                tiles[newTile.getRow()][newTile.getCol()] = newTile;
+            byte[] gameBoardData = new byte[buf.length - 1];
+            for (int i = 1; i < buf.length; i++) {
+                gameBoardData[i - 1] = buf[i];
             }
-
-            game.forward(tiles);
+            GameBoard syncGameBoard = GameBoard.fromJson(game, new String(gameBoardData));
+            game.setGameBoard(syncGameBoard);
 
         } else {
             int row = (int) buf[1];
@@ -436,170 +217,30 @@ public class MultiPlayerActivity
         }
     }
 
-    //=================================================
-
-    // returns whether there are enough players to start the game
-    private boolean shouldStartGame(Room room) {
-        int connectedPlayers = 0;
-        for (Participant p : room.getParticipants()) {
-            if (p.isConnectedToRoom()) ++connectedPlayers;
-        }
-        return connectedPlayers >= MIN_OTHER_PLAYERS + 1;
-    }
-
-    // Returns whether the room is in a state where the game should be canceled.
-    private boolean shouldCancelGame(Room room) {
-        // TODO: Your game-specific cancellation logic here. For example, you might decide to
-        // cancel the game if enough people have declined the invitation or left the room.
-        // You can check a participant's status with Participant.getStatus().
-        // (Also, your UI should have a Cancel button that cancels the game too)
-        return false;
-    }
-
+    /**
+     * Broadcast init. of gameboard
+     *
+     * @param gameState
+     */
     @Override
-    public void onRoomConnecting(Room room) {
-        updateRoom(room);
-    }
+    public void onGameStateChanged(Game.GameState gameState) {
+        super.onGameStateChanged(gameState);
 
-    @Override
-    public void onRoomAutoMatching(Room room) {
-        updateRoom(room);
-    }
-
-    @Override
-    public void onPeerInvitedToRoom(Room room, List<String> strings) {
-        updateRoom(room);
-    }
-
-    @Override
-    public void onPeerDeclined(Room room, List<String> peers) {
-        // peer declined invitation -- see if game should be canceled
-        if (!mPlaying && shouldCancelGame(room)) {
-            Games.RealTimeMultiplayer.leave(getApiClient(), null, mRoomId);
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        }
-        updateRoom(room);
-    }
-
-    @Override
-    public void onPeerJoined(Room room, List<String> strings) {
-        updateRoom(room);
-    }
-
-    @Override
-    public void onPeerLeft(Room room, List<String> peers) {
-        // peer left -- see if game should be canceled
-        if (!mPlaying && shouldCancelGame(room)) {
-            Games.RealTimeMultiplayer.leave(getApiClient(), this, mRoomId);
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        }
-        updateRoom(room);
-    }
-
-    @Override
-    public void onConnectedToRoom(Room room) {
-        mRoomId = room.getRoomId();
-        mParticipants = room.getParticipants();
-        onParticipantsUpdated();
-        mMyGoogleId = room.getParticipantId(Games.Players.getCurrentPlayerId(getApiClient()));
-    }
-
-    @Override
-    public void onDisconnectedFromRoom(Room room) {
-        // leave the room
-        Games.RealTimeMultiplayer.leave(getApiClient(), this, mRoomId);
-
-        // clear the flag that keeps the screen on
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-        mRoomId = null;
-
-        // show error message and return to main screen
-    }
-
-    @Override
-    public void onPeersConnected(Room room, List<String> peers) {
-        if (mPlaying) {
-            // add new player to an ongoing game
-        } else if (shouldStartGame(room)) {
-            // start game!
-            startGame(mParticipants.size());
-        }
-        updateRoom(room);
-    }
-
-    @Override
-    public void onPeersDisconnected(Room room, List<String> peers) {
-        if (mPlaying) {
-            // do game-specific handling of this -- remove player's avatar
-            // from the screen, etc. If not enough players are left for
-            // the game to go on, end the game and leave the room.
-        } else if (shouldCancelGame(room)) {
-            // cancel the game
-            Games.RealTimeMultiplayer.leave(getApiClient(), this, mRoomId);
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        }
-        updateRoom(room);
-    }
-
-    @Override
-    public void onP2PConnected(String s) {
-
-    }
-
-    @Override
-    public void onP2PDisconnected(String s) {
-
-    }
-
-
-    void updateRoom(Room room) {
-        if (room != null) {
-            mParticipants = room.getParticipants();
-            onParticipantsUpdated();
-        }
         /*
-        if (mParticipants != null) {
-            updatePeerScoresDisplay();
-        }*/
-    }
+         * If gamestate switches to RUNNING the gameboard is initialised new
+         */
+        if (gameState == Game.GameState.RUNNING) {
+            Log.d(TAG, "Sending gameboard sync");
+            byte[] gameBoardString = game.exportGameBoard();
 
-    private void onParticipantsUpdated(){
-        if(mParticipant2Id == null){
-            mParticipant2Id = new HashMap<String, Integer>(mParticipants.size());
-        }
-        mParticipant2Id.clear();
-        int id = 0;
-        for(Participant p : mParticipants){
-            if(p.getParticipantId().equals(mMyGoogleId)){
-                myId = id;
+            byte[] message = new byte[gameBoardString.length + 1];
+            message[0] = 'B';
+
+            for (int i = 1; i <= gameBoardString.length; i++) {
+                message[i] = gameBoardString[i - 1];
             }
-            mParticipant2Id.put(p.getParticipantId(), id++);
-        }
-    }
 
-    @Override
-    public void onInitGameBoard(Tile[][] tiles) {
-        byte[] message = new byte[tiles.length * tiles[0].length * 4 + 1];
-        message[0] = 'B';
-
-        int i = 1;
-        for (int row = 0; row < tiles.length; row++) {
-            for (int col = 0; col < tiles[row].length; col++) {
-                byte[] data = Tile.serialize(tiles[row][col]);
-                message[i] = data[0];
-                message[i + 1] = data[1];
-                message[i + 2] = data[2];
-                message[i + 3] = data[3];
-                i += 4;
-            }
+            broadcast(message);
         }
-
-        for (Participant p : mParticipants) {
-            if (!p.getParticipantId().equals(mMyGoogleId)) {
-                Games.RealTimeMultiplayer.sendReliableMessage(getApiClient(), null, message, mRoomId, p.getParticipantId());
-            }
-        }
-        Log.d(TAG, "Sending board sync");
     }
 }

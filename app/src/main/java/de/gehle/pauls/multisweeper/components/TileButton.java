@@ -13,7 +13,9 @@ import static de.gehle.pauls.multisweeper.engine.Tile.TileState.COVERED;
 import static de.gehle.pauls.multisweeper.engine.Tile.TileState.NUMBER;
 
 /**
- * Created by Andi on 05.07.2014.
+ * Representation button of a tile element
+ *
+ * @author Andi
  */
 public class TileButton extends Button {
 
@@ -119,7 +121,7 @@ public class TileButton extends Button {
     private void displayBadFlag() {
         this.setEnabled(false);
         this.setText(Integer.toString(surrounding_mines));
-        if(surrounding_mines > 0) {
+        if (surrounding_mines > 0) {
             this.setTextColor(textColors[surrounding_mines - 1]);
         }
         Drawable image = getResources().getDrawable(R.drawable.badflag_player1);

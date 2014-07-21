@@ -6,10 +6,9 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Tile{
+public class Tile {
 
     private static final String TAG = "Tile";
-    private MinesweeperObserver observer;
 
     public enum TileState {
         COVERED,         // not yet opened (only for shownState)
@@ -21,37 +20,28 @@ public class Tile{
         EXPLODED_MINE    // the mine, which the user stepped on (only for Game Over)
     }
 
-    // that is, what tile really is
+    /**
+     * This is the real state of the tile (s. showState)
+     */
     private TileState realState;
-    // this is what the user sees. The value is being determined by the value of realState
-    // and whether the user has opened the tile yet
+
+    /**
+     * This state sees the user.
+     * The value is being determined by the value of realState and whether the user has opened the tile yet.
+     */
     private TileState shownState;
 
     private int nrSurroundingMines;
-    private int nrSurroundingFlags;
 
+    private int nrSurroundingFlags;
     private boolean numberUncovered;
 
-    // coordinates of this cell
-    private int row, col;
-
-    public Tile(MinesweeperObserver observer, int row, int col) {
-        this.observer = observer;
-        this.row = row;
-        this.col = col;
+    public Tile() {
         realState = TileState.NUMBER;
         shownState = TileState.COVERED;
         nrSurroundingMines = 0;
         nrSurroundingFlags = 0;
         numberUncovered = false;
-    }
-
-    public int getRow() {
-        return row;
-    }
-
-    public int getCol() {
-        return col;
     }
 
     public TileState openTile() {
@@ -63,7 +53,6 @@ public class Tile{
         } else {
             shownState = realState;
         }
-        observer.updateTile(row, col);
         return shownState;
     }
 
@@ -71,24 +60,18 @@ public class Tile{
         if (shownState == TileState.FLAG) {
             if (realState != TileState.MINE) {
                 shownState = TileState.BAD_FLAG;
-                observer.updateTile(row, col);
             }
             return;
         }
-        if(shownState == TileState.EXPLODED_MINE){
+        if (shownState == TileState.EXPLODED_MINE) {
             return;
         }
 
         shownState = realState;
-        observer.updateTile(row, col);
     }
 
     public void updateSurroundingMineCount() {
         ++nrSurroundingMines;
-    }
-
-    public void setNrSurroundingMines(int value) {
-        nrSurroundingMines = value;
     }
 
     public int getNrSurroundingMines() {
@@ -99,43 +82,49 @@ public class Tile{
         return shownState == TileState.NUMBER && nrSurroundingMines == 0;
     }
 
-    public void incNrSurroundingFlags() { ++nrSurroundingFlags; }
-
-    public void decNrSurroundingFlags() { --nrSurroundingFlags; }
-
-    public int getNrSurroundingFlags() { return nrSurroundingFlags; }
-
-    public void setNumberUncovered() { numberUncovered = true; }
-
-    public boolean isUncoverable(){
-        return shownState == TileState.COVERED ||
-               shownState == TileState.UNKNOWN ||
-               (shownState == TileState.NUMBER && !numberUncovered);
+    public void incNrSurroundingFlags() {
+        ++nrSurroundingFlags;
     }
 
-    public boolean isChangeable() {
-        return isUncoverable() ||
-               shownState == TileState.FLAG;
+    public void decNrSurroundingFlags() {
+        --nrSurroundingFlags;
+    }
+
+    public int getNrSurroundingFlags() {
+        return nrSurroundingFlags;
+    }
+
+    public void setNumberUncovered() {
+        numberUncovered = true;
+    }
+
+    public boolean isUncoverable() {
+        return shownState == TileState.COVERED || shownState == TileState.UNKNOWN;
+    }
+
+    public boolean canUncoverSurroundings() {
+        return shownState == TileState.NUMBER && !numberUncovered;
+    }
+
+    public boolean isSwappable() {
+        return isUncoverable() || shownState == TileState.FLAG;
     }
 
     public void setCovered() {
-        if (isChangeable()) {
+        if (isSwappable()) {
             shownState = TileState.COVERED;
-            observer.updateTile(row, col);
         }
     }
 
     public void setFlag() {
-        if (isChangeable()) {
+        if (isSwappable()) {
             shownState = TileState.FLAG;
-            observer.updateTile(row, col);
         }
     }
 
     public void setUnknown() {
-        if (isChangeable()) {
+        if (isSwappable()) {
             shownState = TileState.UNKNOWN;
-            observer.updateTile(row, col);
         }
     }
 
@@ -154,39 +143,16 @@ public class Tile{
         return realState == TileState.MINE;
     }
 
-    public static byte[] serialize(Tile obj) {
-        byte[] output = new byte[4];
-
-        output[0] = (byte) obj.row;
-        output[1] = (byte) obj.col;
-        output[2] = (byte) obj.nrSurroundingMines;
-        output[3] = (byte) (obj.isMine() ? 1 : 0);
-        return output;
-    }
-
-    public static Tile deserialize(byte[] data, MinesweeperObserver observer) {
-        int row = (int) data[0];
-        int col = (int) data[1];
-        int nrSurroundingMines = (int) data[2];
-        boolean isMine = (int) data[3] == 1;
-
-
-        Tile tile = new Tile(observer, row, col);
-        tile.setNrSurroundingMines(nrSurroundingMines);
-
-        if (isMine) {
-            tile.putMine();
-        }
-
-        return tile;
-    }
+    /**
+     * ============================================================
+     * For save games & multiplayer exchange gameboard
+     * ============================================================
+     */
 
     @Override
     public String toString() {
         try {
             JSONObject obj = new JSONObject();
-            obj.put("row", row);
-            obj.put("col", col);
             obj.put("isMine", realState == TileState.MINE);
             obj.put("isFlag", shownState == TileState.FLAG);
             obj.put("isQuestionMark", shownState == TileState.UNKNOWN);
@@ -194,21 +160,17 @@ public class Tile{
             return obj.toString();
         } catch (JSONException ex) {
             ex.printStackTrace();
-            throw new RuntimeException("Error converting save data to JSON.", ex);
+            throw new RuntimeException("Error converting tile to JSON.", ex);
         }
     }
 
-    public static Tile loadFromJson(String json, MinesweeperObserver observer) {
+    public static Tile loadFromJson(String json) {
         if (json == null || json.trim().equals("")) return null;
 
-        Tile tile = null;
+        Tile tile = new Tile();
 
         try {
             JSONObject obj = new JSONObject(json);
-            int row = obj.getInt("row");
-            int col = obj.getInt("col");
-
-            tile = new Tile(observer, row, col);
 
             if (obj.getBoolean("isMine")) {
                 tile.putMine();
