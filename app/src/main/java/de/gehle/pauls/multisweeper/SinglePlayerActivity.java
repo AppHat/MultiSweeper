@@ -31,7 +31,7 @@ public class SinglePlayerActivity extends AbstractGameActivity {
     private static final String TAG = "SINGLE";
 
     private static final int MAX_SNAPSHOT_RESOLVE_RETRIES = 3;
-    private static final String defaultSaveGameName = "continueSnapshot";
+    public static final String DEFAULT_SAVE_GAME_NAME = "continueSnapshot";
 
     private boolean loggedIn = false;
     private String loadSaveGameName = null;
@@ -138,7 +138,7 @@ public class SinglePlayerActivity extends AbstractGameActivity {
         AsyncTask<Void, Void, Snapshots.OpenSnapshotResult> task = new AsyncTask<Void, Void, Snapshots.OpenSnapshotResult>() {
             @Override
             protected Snapshots.OpenSnapshotResult doInBackground(Void... params) {
-                return Games.Snapshots.open(getApiClient(), defaultSaveGameName, true).await();
+                return Games.Snapshots.open(getApiClient(), DEFAULT_SAVE_GAME_NAME, true).await();
             }
 
             @Override
@@ -262,10 +262,11 @@ public class SinglePlayerActivity extends AbstractGameActivity {
 
                 if (status == GamesStatusCodes.STATUS_OK) {
                     final Snapshot snapshot = result.getSnapshot();
-                    // Read the byte content of the saved game.
+                    Games.Snapshots.delete(getApiClient(), snapshot.getMetadata());
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            // Read the byte content of the saved game.
                             game = new Game(observer, snapshot.readFully());
                         }
                     });

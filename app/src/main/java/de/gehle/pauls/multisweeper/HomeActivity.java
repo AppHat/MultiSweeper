@@ -3,14 +3,18 @@ package de.gehle.pauls.multisweeper;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.games.Games;
+import com.google.android.gms.games.GamesStatusCodes;
+import com.google.android.gms.games.snapshot.Snapshot;
 import com.google.android.gms.games.snapshot.SnapshotMetadata;
 import com.google.android.gms.games.snapshot.Snapshots;
 import com.google.example.games.basegameutils.BaseGameActivity;
@@ -25,6 +29,9 @@ public class HomeActivity extends BaseGameActivity {
     private static final int REQUEST_LEADERBOARD = 0;
     private static final String TAG = "HOME";
 
+    private boolean loggedIn = false;
+    private Button continueButton;
+
     public HomeActivity() {
         super(BaseGameActivity.CLIENT_GAMES | BaseGameActivity.CLIENT_SNAPSHOT);
     }
@@ -34,13 +41,17 @@ public class HomeActivity extends BaseGameActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
+        continueButton = (Button) findViewById(R.id.continue_game_button);
+        if (loggedIn) {
+            checkSaveGame(SinglePlayerActivity.DEFAULT_SAVE_GAME_NAME);
+        }
+
         if (isGooglePlayServicesAvailable(this) == ConnectionResult.SUCCESS) {
             Log.d("GGS", "Google Game Service is available!");
         } else {
             Log.d("GGS", "Google Game Service not available! Status: " + isGooglePlayServicesAvailable(this));
         }
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -57,6 +68,12 @@ public class HomeActivity extends BaseGameActivity {
         //int id = item.getItemId();
         return super.onOptionsItemSelected(item);
     }
+
+    /**
+     * ============================================================
+     * Menu button binds
+     * ============================================================
+     */
 
     public void startGame(View view) {
         new AlertDialog.Builder(this)
@@ -118,6 +135,13 @@ public class HomeActivity extends BaseGameActivity {
         finish();
     }
 
+
+    /**
+     * ============================================================
+     * For GGS
+     * ============================================================
+     */
+
     @Override
     public void onSignInFailed() {
 
@@ -125,6 +149,42 @@ public class HomeActivity extends BaseGameActivity {
 
     @Override
     public void onSignInSucceeded() {
+        loggedIn = true;
+        checkSaveGame(SinglePlayerActivity.DEFAULT_SAVE_GAME_NAME);
+    }
 
+    private void checkSaveGame(String saveGameName) {
+        Log.i(TAG, "Checking snapshot for " + saveGameName);
+
+        final String finalSaveGameName = saveGameName;
+
+        AsyncTask<Void, Void, Integer> task = new AsyncTask<Void, Void, Integer>() {
+
+            @Override
+            protected Integer doInBackground(Void... params) {
+                // Open the saved game using its name.
+                Snapshots.OpenSnapshotResult result = Games.Snapshots.open(getApiClient(), finalSaveGameName, true).await();
+                int status = result.getStatus().getStatusCode();
+
+                if (status == GamesStatusCodes.STATUS_OK) {
+                    final Snapshot snapshot = result.getSnapshot();
+                    if (snapshot.readFully().length == 0) {
+                        return GamesStatusCodes.STATUS_GAME_NOT_FOUND;
+                    }
+                    Log.d(TAG, "" + snapshot.readFully());
+                }
+
+                return status;
+            }
+
+            @Override
+            protected void onPostExecute(Integer status) {
+                if (status == GamesStatusCodes.STATUS_OK) {
+                    continueButton.setEnabled(true);
+                }
+            }
+        };
+
+        task.execute();
     }
 }

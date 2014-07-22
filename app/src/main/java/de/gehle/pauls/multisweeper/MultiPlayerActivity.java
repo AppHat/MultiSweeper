@@ -22,22 +22,8 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
 
     private static final String TAG = "Multiplayer";
 
-    /**
-     * Arbitrary request codes for the default UIs like waiting-room or invitation-box.
-     * This can be any integer that's unique in our Activity.
-     */
-    final static int RC_SELECT_PLAYERS = 10000;
-    final static int RC_INVITATION_INBOX = 10001;
     final static int RC_WAITING_ROOM = 10002;
 
-    final static int MIN_OTHER_PLAYERS = 1;
-    final static int MAX_OTHER_PLAYERS = 2;
-
-    private String mRoomId;
-    private boolean mWaitingRoomFinishedFromCode = false;
-    private String mIncomingInvitationId;
-
-    private boolean mPlaying = false;
     // The participants in the currently active game
     ArrayList<Participant> mParticipants = null;
     HashMap<String, Integer> mParticipant2Id = null;
@@ -175,26 +161,21 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
      * Bytes received ([Byte1][Byte2]...[ByteN]) = Meaning
      * [C][3][1] = Participant clicked on field (3,1) with 3,1 as array indices, so min would be 0 and max length -1
      * [L][3][1] = Participant long clicked field (3,1) with 3,1 as array indices, so min would be 0 and max length -1 (Game engine handels if question-mark, flag or removed marks)
-     * [S] = Starting game (E.g. Creator of the room has clicked on play in the waiting room, so we should also switch to game screen and leave the waiting room)
      * [B] [Tile1Data1][Tile1Data2][Tile1Data3][Tile1Data4] [Tile2Data1][Tile2Data2].... = Board-sync
      *
      * @param realTimeMessage Real time message received
      */
     @Override
     public void onRealTimeMessageReceived(RealTimeMessage realTimeMessage) {
+        super.onRealTimeMessageReceived(realTimeMessage);
+
         byte[] buf = realTimeMessage.getMessageData();
         String sender = realTimeMessage.getSenderParticipantId();
         Log.d(TAG, "Message received: " + (char) buf[0] + "/" + (int) buf[1]);
 
         char action = (char) buf[0];
 
-        if (action == 'S') {
-            Log.d(TAG, "Received startGame");
-            mWaitingRoomFinishedFromCode = true;
-            finishActivity(RC_WAITING_ROOM);
-            startGame(mParticipants.size());
-
-        } else if (action == 'B') {
+        if (action == 'B') {
             byte[] gameBoardData = new byte[buf.length - 1];
             for (int i = 1; i < buf.length; i++) {
                 gameBoardData[i - 1] = buf[i];

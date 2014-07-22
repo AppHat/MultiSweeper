@@ -13,6 +13,7 @@ import com.google.android.gms.games.multiplayer.Invitation;
 import com.google.android.gms.games.multiplayer.Multiplayer;
 import com.google.android.gms.games.multiplayer.OnInvitationReceivedListener;
 import com.google.android.gms.games.multiplayer.Participant;
+import com.google.android.gms.games.multiplayer.realtime.RealTimeMessage;
 import com.google.android.gms.games.multiplayer.realtime.RealTimeMessageReceivedListener;
 import com.google.android.gms.games.multiplayer.realtime.Room;
 import com.google.android.gms.games.multiplayer.realtime.RoomConfig;
@@ -191,6 +192,30 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
      * Real time message helpers
      * ============================================================
      */
+
+    /**
+     * Received messages
+     * <p/>
+     * Bytes received ([Byte1][Byte2]...[ByteN]) = Meaning
+     * [S] = Starting game (E.g. Creator of the room has clicked on play in the waiting room, so we should also switch to game screen and leave the waiting room)
+     *
+     * @param realTimeMessage Real time message received
+     */
+    @Override
+    public void onRealTimeMessageReceived(RealTimeMessage realTimeMessage) {
+        byte[] buf = realTimeMessage.getMessageData();
+        String sender = realTimeMessage.getSenderParticipantId();
+        Log.d(TAG, "Message received: " + (char) buf[0] + "/" + (int) buf[1]);
+
+        char action = (char) buf[0];
+
+        if (action == 'S') {
+            Log.d(TAG, "Received startGame");
+            mWaitingRoomFinishedFromCode = true;
+            finishActivity(RC_WAITING_ROOM);
+            startGame(mParticipants.size());
+        }
+    }
 
     protected void broadcast(byte[] message) {
         for (Participant p : mParticipants) {

@@ -23,7 +23,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="continueGame"
-        android:text="@string/continue_game" />
+        android:text="@string/continue_game"
+        android:enabled="false" />
 
     <Button
         android:id="@+id/multiplayer_button"
