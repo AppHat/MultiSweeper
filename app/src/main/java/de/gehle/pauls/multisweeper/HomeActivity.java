@@ -171,7 +171,6 @@ public class HomeActivity extends BaseGameActivity {
                     if (snapshot.readFully().length == 0) {
                         return GamesStatusCodes.STATUS_GAME_NOT_FOUND;
                     }
-                    Log.d(TAG, "" + snapshot.readFully());
                 }
 
                 return status;

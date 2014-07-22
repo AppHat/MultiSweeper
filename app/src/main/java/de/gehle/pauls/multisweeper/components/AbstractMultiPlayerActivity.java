@@ -86,7 +86,7 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         // go to game screen
-        startGame(mParticipants.size());
+        //startGame(mParticipants.size());
     }
 
     protected void startSelectPlayersActivity() {

@@ -7,12 +7,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.google.android.gms.games.multiplayer.Participant;
 import com.google.android.gms.games.multiplayer.realtime.RealTimeMessage;
 import com.google.android.gms.games.multiplayer.realtime.Room;
-
-import java.util.ArrayList;
-import java.util.HashMap;
 
 import de.gehle.pauls.multisweeper.components.AbstractMultiPlayerActivity;
 import de.gehle.pauls.multisweeper.engine.Game;
@@ -22,15 +18,6 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
 
     private static final String TAG = "Multiplayer";
 
-    final static int RC_WAITING_ROOM = 10002;
-
-    // The participants in the currently active game
-    ArrayList<Participant> mParticipants = null;
-    HashMap<String, Integer> mParticipant2Id = null;
-
-    private String mMyGoogleId = null;
-
-    //============================================================
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -177,9 +164,7 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
 
         if (action == 'B') {
             byte[] gameBoardData = new byte[buf.length - 1];
-            for (int i = 1; i < buf.length; i++) {
-                gameBoardData[i - 1] = buf[i];
-            }
+            System.arraycopy(buf, 1, gameBoardData, 0, buf.length - 1);
             GameBoard syncGameBoard = GameBoard.fromJson(game, new String(gameBoardData));
             game.setGameBoard(syncGameBoard);
 
@@ -201,7 +186,7 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
     /**
      * Broadcast init. of gameboard
      *
-     * @param gameState
+     * @param gameState The new state of the game
      */
     @Override
     public void onGameStateChanged(Game.GameState gameState) {
@@ -216,10 +201,7 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
 
             byte[] message = new byte[gameBoardString.length + 1];
             message[0] = 'B';
-
-            for (int i = 1; i <= gameBoardString.length; i++) {
-                message[i] = gameBoardString[i - 1];
-            }
+            System.arraycopy(gameBoardString, 0, message, 1, gameBoardString.length);
 
             broadcast(message);
         }
