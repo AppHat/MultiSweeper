@@ -9,11 +9,12 @@ public class CounterDown extends Counter {
 
     CounterDown(CounterObserver observer, int max) {
         super(observer, max);
+        reset();
     }
 
     CounterDown(CounterObserver observer, int max, int min) {
         super(observer, max, min);
-        counter = max;
+        reset();
     }
 
     @Override

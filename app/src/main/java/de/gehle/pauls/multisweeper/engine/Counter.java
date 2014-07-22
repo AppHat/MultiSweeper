@@ -24,7 +24,7 @@ public class Counter {
         this.observer = observer;
         this.max = max;
         this.min = min;
-        counter = min;
+        reset();
     }
 
     public void reset() {

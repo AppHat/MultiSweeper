@@ -43,17 +43,13 @@ public class GameBoard {
         this.rows = rows;
         this.cols = cols;
         this.mines = (mines > rows * cols) ? rows * cols : mines;
-        nrOfCoveredFields = rows * cols - mines;
 
         tiles = new Tile[rows][cols];
-        for (int row = 0; row < rows; row++) {
-            for (int col = 0; col < cols; col++) {
-                tiles[row][col] = new Tile();
-            }
-        }
+        reset();
     }
 
     public void reset() {
+        nrOfCoveredFields = rows * cols - mines;
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
                 tiles[row][col] = new Tile();
@@ -108,7 +104,7 @@ public class GameBoard {
             return 0;
         }
 
-        if (state == Tile.TileState.COVERED || state == Tile.TileState.UNKNOWN) {
+        if ((state == Tile.TileState.COVERED || state == Tile.TileState.UNKNOWN) && !tiles[row][col].isMine()) {
             --nrOfCoveredFields;
         }
 

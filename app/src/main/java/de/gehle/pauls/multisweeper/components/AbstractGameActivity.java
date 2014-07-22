@@ -105,7 +105,7 @@ public abstract class AbstractGameActivity extends BaseGameActivity implements M
 
         int[] difficultySettings = getDifficultySettings(difficultyIndex);
         Log.d("this is my array", "arr: " + Arrays.toString(difficultySettings));
-        game = new Game(this, difficultyIndex, difficultySettings[0], difficultySettings[1], difficultySettings[2], nrOfPlayers);
+        game = new Game(this, difficultySettings[0], difficultySettings[1], difficultySettings[2], nrOfPlayers);
 
         initButtons();
         showGameState();

@@ -23,8 +23,6 @@ public class Game {
     private Score score;
 
     private int nrOfPlayers;
-    private int difficulty;
-
 
     public enum GameState {
         PREPARED,
@@ -38,8 +36,8 @@ public class Game {
     /**
      * Game constructor for Minesweeper
      */
-    public Game(MinesweeperObserver observer, int difficulty, int rows, int cols, int mines) {
-        this(observer, difficulty, rows, cols, mines, 1);
+    public Game(MinesweeperObserver observer, int rows, int cols, int mines) {
+        this(observer, rows, cols, mines, 1);
     }
 
     /**
@@ -48,14 +46,12 @@ public class Game {
      * Initialises a playable field with timer and mine-counter
      *
      * @param observer   An object, which will be notified in case of changes
-     * @param difficulty 0 for easy, 1 for medium, 2 for hard
      * @param rows       Rows the gamefield should have
      * @param cols       Cols the gamefield should have
      * @param mines      Amount of mines placed on the gamefield
      */
-    public Game(MinesweeperObserver observer, int difficulty, int rows, int cols, int mines, int nrOfPlayers) {
+    public Game(MinesweeperObserver observer, int rows, int cols, int mines, int nrOfPlayers) {
         this.observer = observer;
-        this.difficulty = difficulty;
         this.nrOfPlayers = nrOfPlayers;
         timer = new Timer(observer);
         mineCounter = new CounterDown(observer, mines);
@@ -237,7 +233,6 @@ public class Game {
         try {
             JSONObject obj = new JSONObject();
             obj.put("gameBoard", gameBoard.toJson());
-            obj.put("difficulty", difficulty);
             obj.put("timeInSeconds", timer.getSecondsPassed());
             return obj.toString();
         } catch (JSONException ex) {
@@ -255,7 +250,6 @@ public class Game {
         try {
             JSONObject obj = new JSONObject(json);
 
-            difficulty = obj.getInt("difficulty");
             gameBoard = GameBoard.fromJson(this, obj.getJSONObject("gameBoard").toString());
 
             //Recalculate counter value
