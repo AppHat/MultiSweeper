@@ -62,11 +62,14 @@ public class TileButton extends Button {
             case BAD_FLAG:
                 displayBadFlag();
                 break;
+            case GOOD_FLAG:
+                displayGoodFlag();
+                break;
             case EXPLODED_MINE:
                 displayExplodedMine();
                 break;
             default:
-                setState(COVERED);
+                this.state = COVERED;
         }
     }
 
@@ -130,6 +133,11 @@ public class TileButton extends Button {
         this.setCompoundDrawables(image, null, null, null);
         this.setCompoundDrawablePadding(-53);
         this.setTextColor(Color.parseColor("#e9e9e9"));
+    }
+
+    private void displayGoodFlag() {
+        this.setEnabled(false);
+        displayFlag();
     }
 
     private void displayExplodedMine() {

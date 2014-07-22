@@ -17,6 +17,7 @@ public class Tile {
         UNKNOWN,         // a field, where user doesn't know, what it is(only for shownState)
         MINE,            // a mined field
         BAD_FLAG,        // a no-mine field covered with a flag by user (only for Game Over)
+        GOOD_FLAG,        // a mine field covered with a flag by user (only for Game Over)
         EXPLODED_MINE    // the mine, which the user stepped on (only for Game Over)
     }
 
@@ -60,6 +61,8 @@ public class Tile {
         if (shownState == TileState.FLAG) {
             if (realState != TileState.MINE) {
                 shownState = TileState.BAD_FLAG;
+            } else {
+                shownState = TileState.GOOD_FLAG;
             }
             return;
         }
