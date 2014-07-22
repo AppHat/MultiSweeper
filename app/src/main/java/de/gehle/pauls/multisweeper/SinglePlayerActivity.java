@@ -261,9 +261,14 @@ public class SinglePlayerActivity extends AbstractGameActivity {
                 int status = result.getStatus().getStatusCode();
 
                 if (status == GamesStatusCodes.STATUS_OK) {
-                    Snapshot snapshot = result.getSnapshot();
+                    final Snapshot snapshot = result.getSnapshot();
                     // Read the byte content of the saved game.
-                    game = new Game(observer, snapshot.readFully());
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            game = new Game(observer, snapshot.readFully());
+                        }
+                    });
                 } else {
                     Log.e(TAG, "Error while loading: " + status);
                 }

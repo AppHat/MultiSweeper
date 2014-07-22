@@ -263,9 +263,9 @@ public class Game {
                 }
             }
 
-            //timer = new Timer(observer);
-            //timer.setSecondsPassed(obj.getInt("timeInSeconds"));
-            //timer.start();
+            timer = new Timer(observer);
+            timer.setSecondsPassed(obj.getInt("timeInSeconds"));
+            timer.start();
 
         } catch (JSONException ex) {
             ex.printStackTrace();
