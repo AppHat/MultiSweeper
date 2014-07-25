@@ -33,7 +33,6 @@ public class SinglePlayerActivity extends AbstractGameActivity {
     private static final int MAX_SNAPSHOT_RESOLVE_RETRIES = 3;
     public static final String DEFAULT_SAVE_GAME_NAME = "continueSnapshot";
 
-    private boolean loggedIn = false;
     private String loadSaveGameName = null;
 
     public SinglePlayerActivity() {
@@ -47,7 +46,7 @@ public class SinglePlayerActivity extends AbstractGameActivity {
         Intent intent = getIntent();
         String saveGameName = intent.getStringExtra(Game.KEY_SAVEGAME);
         if (saveGameName != null) {
-            if (loggedIn) {
+            if (isSignedIn()) {
                 loadSaveGame(saveGameName);
             } else {
                 //To see the game, but not yet started or init
@@ -107,13 +106,11 @@ public class SinglePlayerActivity extends AbstractGameActivity {
 
     @Override
     public void onSignInFailed() {
-        loggedIn = false;
         startGame(1);
     }
 
     @Override
     public void onSignInSucceeded() {
-        loggedIn = true;
         if (loadSaveGameName != null) {
             loadSaveGame(loadSaveGameName);
             loadSaveGameName = null;

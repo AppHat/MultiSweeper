@@ -86,7 +86,7 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         // go to game screen
-        //startGame(mParticipants.size());
+        //startGame(1);
     }
 
     protected void startSelectPlayersActivity() {
@@ -305,28 +305,29 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
         // store invitation for use when player accepts this invitation
         mIncomingInvitationId = invitation.getInvitationId();
 
-        /**
-         * If accept popup accept invatation:
-         * RoomConfig.Builder roomConfigBuilder = makeBasicRoomConfigBuilder();
-         roomConfigBuilder.setInvitationIdToAccept(mIncomingInvitationId);
-         Games.RealTimeMultiplayer.join(getApiClient(), roomConfigBuilder.build());
+        //If accept popup accept invatation:
+        RoomConfig.Builder roomConfigBuilder = makeBasicRoomConfigBuilder();
+        roomConfigBuilder.setInvitationIdToAccept(mIncomingInvitationId);
+        Games.RealTimeMultiplayer.join(getApiClient(), roomConfigBuilder.build());
 
-         // prevent screen from sleeping during handshake
-         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        // prevent screen from sleeping during handshake
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-         // now, go to game screen
-         */
+        // now, go to game screen
+        startGame(mParticipants.size());
     }
 
     @Override
     public void onInvitationRemoved(String s) {
-
+        mIncomingInvitationId = null;
     }
 
     //=================================================
 
     @Override
     public void onRoomCreated(int statusCode, Room room) {
+        updateRoom(room);
+
         if (statusCode != GamesStatusCodes.STATUS_OK) {
             // let screen go to sleep
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -334,8 +335,6 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
             // show error message, return to main screen.
             return;
         }
-
-        mRoomId = room.getRoomId();
 
         // get waiting room intent
         Intent i = Games.RealTimeMultiplayer.getWaitingRoomIntent(getApiClient(), room, Integer.MAX_VALUE);
@@ -344,6 +343,8 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
 
     @Override
     public void onJoinedRoom(int statusCode, Room room) {
+        updateRoom(room);
+
         if (statusCode != GamesStatusCodes.STATUS_OK) {
             // let screen go to sleep
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -352,8 +353,6 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
             return;
         }
 
-        mRoomId = room.getRoomId();
-
         // get waiting room intent
         Intent i = Games.RealTimeMultiplayer.getWaitingRoomIntent(getApiClient(), room, Integer.MAX_VALUE);
         startActivityForResult(i, RC_WAITING_ROOM);
@@ -361,19 +360,19 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
 
     @Override
     public void onLeftRoom(int i, String s) {
-        mRoomId = null;
+        updateRoom(null);
     }
 
     @Override
     public void onRoomConnected(int statusCode, Room room) {
+        updateRoom(room);
+
         if (statusCode != GamesStatusCodes.STATUS_OK) {
             // let screen go to sleep
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
             // show error message, return to main screen.
         }
-
-        updateRoom(room);
     }
 
     //=================================================
@@ -395,12 +394,13 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
 
     @Override
     public void onPeerDeclined(Room room, List<String> peers) {
+        updateRoom(room);
+
         // peer declined invitation -- see if game should be canceled
         if (!mPlaying && shouldCancelGame(room)) {
             Games.RealTimeMultiplayer.leave(getApiClient(), null, mRoomId);
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
-        updateRoom(room);
     }
 
     @Override
@@ -410,20 +410,18 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
 
     @Override
     public void onPeerLeft(Room room, List<String> peers) {
+        updateRoom(room);
+
         // peer left -- see if game should be canceled
         if (!mPlaying && shouldCancelGame(room)) {
             Games.RealTimeMultiplayer.leave(getApiClient(), this, mRoomId);
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
-        updateRoom(room);
     }
 
     @Override
     public void onConnectedToRoom(Room room) {
-        mRoomId = room.getRoomId();
-        mParticipants = room.getParticipants();
-        onParticipantsUpdated();
-        mMyGoogleId = room.getParticipantId(Games.Players.getCurrentPlayerId(getApiClient()));
+        updateRoom(room);
     }
 
     @Override
@@ -434,24 +432,27 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
         // clear the flag that keeps the screen on
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        mRoomId = null;
+        updateRoom(null);
 
         // show error message and return to main screen
     }
 
     @Override
     public void onPeersConnected(Room room, List<String> peers) {
+        updateRoom(room);
+
         if (mPlaying) {
             // add new player to an ongoing game
         } else if (shouldStartGame(room)) {
             // start game!
             startGame(mParticipants.size());
         }
-        updateRoom(room);
     }
 
     @Override
     public void onPeersDisconnected(Room room, List<String> peers) {
+        updateRoom(room);
+
         if (mPlaying) {
             // do game-specific handling of this -- remove player's avatar
             // from the screen, etc. If not enough players are left for
@@ -461,7 +462,6 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
             Games.RealTimeMultiplayer.leave(getApiClient(), this, mRoomId);
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
-        updateRoom(room);
     }
 
     @Override
@@ -476,8 +476,12 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
 
     void updateRoom(Room room) {
         if (room != null) {
+            mRoomId = room.getRoomId();
             mParticipants = room.getParticipants();
+            mMyGoogleId = room.getParticipantId(Games.Players.getCurrentPlayerId(getApiClient()));
             onParticipantsUpdated();
+        } else {
+            mRoomId = null;
         }
         /*
         if (mParticipants != null) {
