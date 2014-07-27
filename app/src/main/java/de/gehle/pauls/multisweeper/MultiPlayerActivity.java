@@ -157,7 +157,7 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
         super.onRealTimeMessageReceived(realTimeMessage);
 
         byte[] buf = realTimeMessage.getMessageData();
-        String sender = realTimeMessage.getSenderParticipantId();
+        //String sender = realTimeMessage.getSenderParticipantId();
         Log.d(TAG, "Message received: " + (char) buf[0] + "/" + (int) buf[1]);
 
         char action = (char) buf[0];

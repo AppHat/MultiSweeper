@@ -138,11 +138,11 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
             }
 
             // get the invitee list
-            Bundle extras = data.getExtras();
+            //Bundle extras = data.getExtras();
             final ArrayList<String> invitees = data.getStringArrayListExtra(Games.EXTRA_PLAYER_IDS);
 
             // get auto-match criteria
-            Bundle autoMatchCriteria = null;
+            Bundle autoMatchCriteria;
             int minAutoMatchPlayers = data.getIntExtra(Multiplayer.EXTRA_MIN_AUTOMATCH_PLAYERS, 0);
             int maxAutoMatchPlayers = data.getIntExtra(Multiplayer.EXTRA_MAX_AUTOMATCH_PLAYERS, 0);
 
@@ -181,9 +181,6 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
 
             // prevent screen from sleeping during handshake
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-            // go to game screen
-            startGame(mParticipants.size());
         }
     }
 
@@ -204,7 +201,7 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
     @Override
     public void onRealTimeMessageReceived(RealTimeMessage realTimeMessage) {
         byte[] buf = realTimeMessage.getMessageData();
-        String sender = realTimeMessage.getSenderParticipantId();
+        //String sender = realTimeMessage.getSenderParticipantId();
         Log.d(TAG, "Message received: " + (char) buf[0] + "/" + (int) buf[1]);
 
         char action = (char) buf[0];

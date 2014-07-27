@@ -284,5 +284,8 @@ public class Game {
 
     public void setGameBoard(GameBoard gameBoard) {
         this.gameBoard = gameBoard;
+        if(gameState == GameState.PREPARED) {
+            setGameState(GameState.RUNNING);
+        }
     }
 }
