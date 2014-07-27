@@ -23,6 +23,7 @@ public class Game {
     private Score score;
 
     private int nrOfPlayers;
+    private int currentPlayer;
 
     public enum GameState {
         PREPARED,
@@ -57,7 +58,7 @@ public class Game {
         mineCounter = new CounterDown(observer, mines);
         gameBoard = new GameBoard(this, rows, cols, mines);
         score = new Score(nrOfPlayers);
-        setGameState(GameState.PREPARED);
+        gameState = GameState.PREPARED;
     }
 
     /**
@@ -83,6 +84,8 @@ public class Game {
         Log.d("GameEngine", "Player-" + String.valueOf(playerId) + " clicked on " +
                 String.valueOf(row) + ":" + String.valueOf(col));
 
+        currentPlayer = playerId;
+
         //Start game on first click
         if (gameState == GameState.PREPARED) {
             startGame(row, col);
@@ -95,14 +98,6 @@ public class Game {
          */
         int uncovered = gameBoard.uncover(row, col);
         score.inc(playerId, uncovered);
-
-
-        if (gameState == GameState.GAME_LOST) {
-            score.reset(playerId);
-            endGame();
-        } else if (gameState == GameState.GAME_WON) {
-            endGame();
-        }
     }
 
     /**
@@ -131,10 +126,13 @@ public class Game {
         gameBoard.setupTiles(row, col);
     }
 
-    void endGame() {
+    public void endGame(GameState state) {
+        if (state == GameState.GAME_LOST) {
+            score.reset(currentPlayer);
+        }
         timer.stop();
         gameBoard.uncoverAll();
-        observer.onGameStateChanged(gameState);
+        setGameState(state);
     }
 
     /**

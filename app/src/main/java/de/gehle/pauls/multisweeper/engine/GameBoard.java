@@ -125,7 +125,7 @@ public class GameBoard {
 
 
         if (state == Tile.TileState.EXPLODED_MINE) {
-            game.setGameState(Game.GameState.GAME_LOST);
+            game.endGame(Game.GameState.GAME_LOST);
         }
         //If the tile has no surrounding mines, open surrounding tiles
         else if (tiles[row][col].isEmpty()) {
@@ -133,7 +133,7 @@ public class GameBoard {
         }
 
         if (nrOfCoveredFields == 0) {
-            game.setGameState(Game.GameState.GAME_WON);
+            game.endGame(Game.GameState.GAME_WON);
         }
 
         return oldNrOfCoveredFields - nrOfCoveredFields;

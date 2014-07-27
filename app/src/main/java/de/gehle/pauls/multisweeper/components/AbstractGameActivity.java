@@ -251,37 +251,39 @@ public abstract class AbstractGameActivity extends BaseGameActivity implements M
 
     @Override
     public void onGameStateChanged(Game.GameState gameState) {
-        if (gameState == Game.GameState.GAME_WON || gameState == Game.GameState.GAME_LOST) {
-            Log.d("GameActivity", "Game finished");
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-            int score = game.getScore(myId);
-
-            if (game.getPlace(myId) == 1 && score > 0) {
-                dialogBuilder.setTitle(R.string.gamestate_won);
-                Games.Leaderboards.submitScore(getApiClient(), getString(R.string.leaderboard_singleplayer), score);
-                Log.d("Score", "Score saved");
-            } else {
-                dialogBuilder.setTitle(R.string.gamestate_lost);
-            }
-
-            AlertDialog dialog = dialogBuilder.setMessage("Score: " + score + " Points")
-                    .setPositiveButton(R.string.new_game, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int id) {
-                            resetGame(game.getNrOfPlayers());
-                        }
-                    })
-                    .setNegativeButton(R.string.back, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int id) {
-                            //Stop the activity
-                            AbstractGameActivity.this.finish();
-                        }
-                    })
-                    .create();
-            dialog.show();
-            TextView messageText = (TextView) dialog.findViewById(android.R.id.message);
-            messageText.setGravity(Gravity.CENTER);
+        if (gameState != Game.GameState.GAME_WON && gameState != Game.GameState.GAME_LOST) {
+            return;
         }
+
+        Log.d("GameActivity", "Game finished");
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        int score = game.getScore(myId);
+
+        if (gameState == Game.GameState.GAME_WON) {
+            dialogBuilder.setTitle(R.string.gamestate_won);
+            Games.Leaderboards.submitScore(getApiClient(), getString(R.string.leaderboard_singleplayer), score);
+            Log.d("Score", "Score saved");
+        } else if (gameState == Game.GameState.GAME_LOST) {
+            dialogBuilder.setTitle(R.string.gamestate_lost);
+        }
+
+        AlertDialog dialog = dialogBuilder.setMessage("Score: " + score + " Points")
+                .setPositiveButton(R.string.new_game, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        resetGame(game.getNrOfPlayers());
+                    }
+                })
+                .setNegativeButton(R.string.back, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        //Stop the activity
+                        AbstractGameActivity.this.finish();
+                    }
+                })
+                .create();
+        dialog.show();
+        TextView messageText = (TextView) dialog.findViewById(android.R.id.message);
+        messageText.setGravity(Gravity.CENTER);
     }
 }
