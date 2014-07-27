@@ -57,7 +57,7 @@ public class Game {
         mineCounter = new CounterDown(observer, mines);
         gameBoard = new GameBoard(this, rows, cols, mines);
         score = new Score(nrOfPlayers);
-        gameState = GameState.PREPARED;
+        setGameState(GameState.PREPARED);
     }
 
     /**
@@ -69,7 +69,7 @@ public class Game {
         this.nrOfPlayers = 1;
         loadFromJson(new String(data));
         score = new Score(nrOfPlayers);
-        gameState = GameState.RUNNING;
+        setGameState(GameState.RUNNING);
     }
 
     /**
@@ -86,7 +86,7 @@ public class Game {
         //Start game on first click
         if (gameState == GameState.PREPARED) {
             startGame(row, col);
-            gameState = GameState.RUNNING;
+            setGameState(GameState.RUNNING);
             observer.onGameStateChanged(gameState);
         }
 
@@ -146,7 +146,7 @@ public class Game {
         timer.reset();
         mineCounter.reset();
         gameBoard.reset();
-        gameState = GameState.PREPARED;
+        setGameState(GameState.PREPARED);
         observer.onGameStateChanged(gameState);
 
         /**
@@ -188,6 +188,7 @@ public class Game {
 
     void setGameState(GameState state) {
         gameState = state;
+        observer.onGameStateChanged(gameState);
     }
 
     public int getScore(int playerId) {
