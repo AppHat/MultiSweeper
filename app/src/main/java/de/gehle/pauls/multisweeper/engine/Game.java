@@ -90,7 +90,6 @@ public class Game {
         if (gameState == GameState.PREPARED) {
             startGame(row, col);
             setGameState(GameState.RUNNING);
-            observer.onGameStateChanged(gameState);
         }
 
         /**
