@@ -144,7 +144,6 @@ public class Game {
         mineCounter.reset();
         gameBoard.reset();
         setGameState(GameState.PREPARED);
-        observer.onGameStateChanged(gameState);
 
         /**
          * Need to create a new score object,
