@@ -91,7 +91,6 @@ public class Game {
         if (gameState == GameState.PREPARED) {
             startGame(row, col);
             setGameState(GameState.RUNNING);
-            observer.onGameStateChanged(gameState);
         }
 
         /**
@@ -146,7 +145,6 @@ public class Game {
         mineCounter.reset();
         gameBoard.reset();
         setGameState(GameState.PREPARED);
-        observer.onGameStateChanged(gameState);
 
         /**
          * Need to create a new score object,
