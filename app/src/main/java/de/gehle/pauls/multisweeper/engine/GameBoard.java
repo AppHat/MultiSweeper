@@ -97,13 +97,13 @@ public class GameBoard {
      * @return Amount of field which were uncovered (If not uncoverable = 0)
      */
     public int uncover(int row, int col) {
-        Tile.TileState state = tiles[row][col].getState();
-        int oldNrOfCoveredFields = nrOfCoveredFields;
-
         if (!tiles[row][col].isUncoverable() && !tiles[row][col].canUncoverSurroundings()) {
             return 0;
         }
 
+        int oldNrOfCoveredFields = nrOfCoveredFields;
+
+        Tile.TileState state = tiles[row][col].getState();
         if ((state == Tile.TileState.COVERED || state == Tile.TileState.UNKNOWN) && !tiles[row][col].isMine()) {
             --nrOfCoveredFields;
         }

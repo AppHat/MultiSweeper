@@ -23,6 +23,7 @@ public class Game {
     private Score score;
 
     private int nrOfPlayers;
+
     private int currentPlayer;
 
     public enum GameState {
@@ -187,6 +188,10 @@ public class Game {
     void setGameState(GameState state) {
         gameState = state;
         observer.onGameStateChanged(gameState);
+    }
+
+    public int getCurrentPlayer() {
+        return currentPlayer;
     }
 
     public int getScore(int playerId) {
