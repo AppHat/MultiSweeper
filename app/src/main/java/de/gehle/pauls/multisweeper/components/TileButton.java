@@ -19,8 +19,15 @@ import static de.gehle.pauls.multisweeper.engine.Tile.TileState.NUMBER;
  */
 public class TileButton extends Button {
 
+    /**
+     * Drawables support for 3 different players
+     */
+    private final static int MAX_DRAWABLE_ID = 2;
+
     private Tile.TileState state = COVERED;
     private int surrounding_mines;
+
+    private int playerId = 0;
 
     private final static int[] textColors = {
             Color.CYAN, Color.GREEN, Color.RED, Color.LTGRAY,
@@ -73,6 +80,23 @@ public class TileButton extends Button {
         }
     }
 
+    public void setPlayerId(int id) {
+        playerId = id;
+    }
+
+    /**
+     * Returns playerId or 0 if playerId is to high and has no own drawables yet
+     *
+     * @return playerId || 0
+     */
+    public int getPlayerId() {
+        if (playerId >= 0 && playerId <= MAX_DRAWABLE_ID) {
+            return playerId;
+        }
+
+        return 0;
+    }
+
     private void normalize() {
         this.setEnabled(true);
         this.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
@@ -95,7 +119,7 @@ public class TileButton extends Button {
     }
 
     private void displayFlag() {
-        Drawable image = getResources().getDrawable(R.drawable.flag_player1);
+        Drawable image = getResources().getDrawable(getResources().getIdentifier("flag_player" + getPlayerId(), "drawable", "de.gehle.pauls.multisweeper"));
         image.setBounds(0, 0, 45, 45);
         this.setPadding(8, 0, 0, 0);
         this.setCompoundDrawables(image, null, null, null);
@@ -107,7 +131,7 @@ public class TileButton extends Button {
         this.setTextColor(Color.parseColor("#00d9ff"));
         this.setTypeface(null, Typeface.BOLD);
         */
-        Drawable image = getResources().getDrawable(R.drawable.question_mark);
+        Drawable image = getResources().getDrawable(getResources().getIdentifier("questionmark_player" + getPlayerId(), "drawable", "de.gehle.pauls.multisweeper"));
         image.setBounds(0, 0, 45, 45);
         this.setPadding(10, 0, 0, 0);
         this.setCompoundDrawables(image, null, null, null);
@@ -127,7 +151,7 @@ public class TileButton extends Button {
         if (surrounding_mines > 0) {
             this.setTextColor(textColors[surrounding_mines - 1]);
         }
-        Drawable image = getResources().getDrawable(R.drawable.badflag_player1);
+        Drawable image = getResources().getDrawable(getResources().getIdentifier("badflag_player" + getPlayerId(), "drawable", "de.gehle.pauls.multisweeper"));
         image.setBounds(0, 0, 45, 45);
         this.setPadding(8, 0, 0, 0);
         this.setCompoundDrawables(image, null, null, null);

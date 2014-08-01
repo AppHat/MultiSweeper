@@ -302,16 +302,20 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
         // store invitation for use when player accepts this invitation
         mIncomingInvitationId = invitation.getInvitationId();
 
-        //If accept popup accept invatation:
-        RoomConfig.Builder roomConfigBuilder = makeBasicRoomConfigBuilder();
-        roomConfigBuilder.setInvitationIdToAccept(mIncomingInvitationId);
-        Games.RealTimeMultiplayer.join(getApiClient(), roomConfigBuilder.build());
+        //TODO: Show popup maybe?
 
-        // prevent screen from sleeping during handshake
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        if (!mPlaying) {
+            //If accept popup accept invatation:
+            RoomConfig.Builder roomConfigBuilder = makeBasicRoomConfigBuilder();
+            roomConfigBuilder.setInvitationIdToAccept(mIncomingInvitationId);
+            Games.RealTimeMultiplayer.join(getApiClient(), roomConfigBuilder.build());
 
-        // now, go to game screen
-        startGame(mParticipants.size());
+            // prevent screen from sleeping during handshake
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+            // now, go to game screen
+            startGame(mParticipants.size());
+        }
     }
 
     @Override
@@ -491,12 +495,14 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
             mParticipant2Id = new HashMap<String, Integer>(mParticipants.size());
         }
         mParticipant2Id.clear();
-        int id = 0;
+        int id = 1;
+        myId = 0;
         for (Participant p : mParticipants) {
             if (p.getParticipantId().equals(mMyGoogleId)) {
-                myId = id;
+                mParticipant2Id.put(p.getParticipantId(), myId);
+            } else {
+                mParticipant2Id.put(p.getParticipantId(), id++);
             }
-            mParticipant2Id.put(p.getParticipantId(), id++);
         }
     }
 }

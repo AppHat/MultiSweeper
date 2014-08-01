@@ -108,6 +108,7 @@ public class Game {
      * @param col Col of the clicked tileButton
      */
     public void playerMoveAlt(int playerId, int row, int col) {
+        Log.d(TAG, "LongClicked player: " + playerId);
         Tile.TileState state = gameBoard.swapMarker(playerId, row, col);
         if (state == Tile.TileState.FLAG) {
             mineCounter.dec();

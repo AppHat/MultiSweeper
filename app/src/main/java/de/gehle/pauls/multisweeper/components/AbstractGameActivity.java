@@ -218,6 +218,7 @@ public abstract class AbstractGameActivity extends BaseGameActivity implements M
     public void updateTile(int row, int col) {
         Tile tile = game.getTile(row, col);
         Tile.TileState state = tile.getState();
+        tileButtons[row][col].setPlayerId(tile.getPlayerId());
         tileButtons[row][col].setState(state);
         if (state == Tile.TileState.NUMBER) {
             tileButtons[row][col].setSurroundingMines(tile.getNrSurroundingMines());

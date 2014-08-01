@@ -88,6 +88,7 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
                             @Override
                             public void onClick(View view) {
                                 int id = mParticipant2Id.get(mMyGoogleId);
+                                Log.d(TAG, "My id: " + id);
                                 game.playerMove(id, curRow, curCol);
                                 sendOnClick(curRow, curCol);
                             }
