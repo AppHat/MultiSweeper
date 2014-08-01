@@ -258,6 +258,10 @@ public abstract class AbstractGameActivity extends BaseGameActivity implements M
         }
         Log.d("GameActivity", "Game finished");
 
+        if (gameState == Game.GameState.GAME_LOST) {
+            Games.Achievements.unlock(getApiClient(), getString(R.string.achievement_first_lost));
+        }
+
 
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
 

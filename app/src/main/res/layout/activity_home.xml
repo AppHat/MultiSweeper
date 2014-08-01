@@ -41,6 +41,13 @@
         android:text="@string/high_scores" />
 
     <Button
+        android:id="@+id/achievement_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="achievements"
+        android:text="@string/achievement_button" />
+
+    <Button
         android:id="@+id/rules_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

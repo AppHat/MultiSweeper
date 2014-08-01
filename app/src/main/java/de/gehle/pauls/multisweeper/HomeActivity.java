@@ -27,6 +27,7 @@ import static com.google.android.gms.common.GooglePlayServicesUtil.isGooglePlayS
 public class HomeActivity extends BaseGameActivity {
 
     private static final int REQUEST_LEADERBOARD = 0;
+    private static final int REQUEST_ACHIEVEMENTS = 1;
     private static final String TAG = "HOME";
 
     private boolean loggedIn = false;
@@ -124,6 +125,10 @@ public class HomeActivity extends BaseGameActivity {
 
     public void leaderboard(View view) {
         startActivityForResult(Games.Leaderboards.getLeaderboardIntent(getApiClient(), getString(R.string.leaderboard_singleplayer)), REQUEST_LEADERBOARD);
+    }
+
+    public void achievements(View view) {
+        startActivityForResult(Games.Achievements.getAchievementsIntent(getApiClient()), REQUEST_ACHIEVEMENTS);
     }
 
     public void rules(View view) {

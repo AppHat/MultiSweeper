@@ -1,11 +1,13 @@
 package de.gehle.pauls.multisweeper;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class RulesActivity extends Activity {
+import com.google.android.gms.games.Games;
+import com.google.example.games.basegameutils.BaseGameActivity;
+
+public class RulesActivity extends BaseGameActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,5 +30,15 @@ public class RulesActivity extends Activity {
         // as you specify a parent activity in AndroidManifest.xml.
         //int id = item.getItemId();
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onSignInFailed() {
+
+    }
+
+    @Override
+    public void onSignInSucceeded() {
+        Games.Achievements.unlock(getApiClient(), getString(R.string.achievement_rules));
     }
 }

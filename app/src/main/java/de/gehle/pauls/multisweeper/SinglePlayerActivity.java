@@ -117,6 +117,15 @@ public class SinglePlayerActivity extends AbstractGameActivity {
         }
     }
 
+    @Override
+    public void onGameStateChanged(Game.GameState gameState) {
+        super.onGameStateChanged(gameState);
+
+        if (gameState == Game.GameState.GAME_WON) {
+            Games.Achievements.increment(getApiClient(), getString(R.string.achievement_singleplayer_5_games_won), 1);
+        }
+    }
+
 
     /**
      * ============================================================

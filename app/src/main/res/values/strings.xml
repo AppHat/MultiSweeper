@@ -33,8 +33,5 @@
     <string name="minecounter_title">Mines</string>
     <string name="new_game">Try again</string>
     <string name="back">Back</string>
-
-
-    <string name="surrounding_mines_1">1</string>
-
+    <string name="achievement_button">Achievements</string>
 </resources>

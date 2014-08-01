@@ -2,4 +2,8 @@
 <resources>
     <string name="app_id">1063799807753</string>
     <string name="leaderboard_singleplayer">CgkIib6j-_oeEAIQAQ</string>
+
+    <string name="achievement_first_lost">CgkIib6j-_oeEAIQCA</string>
+    <string name="achievement_rules">CgkIib6j-_oeEAIQCg</string>
+    <string name="achievement_singleplayer_5_games_won">CgkIib6j-_oeEAIQAw</string>
 </resources>
