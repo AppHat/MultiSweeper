@@ -287,8 +287,11 @@ public class Game {
 
     public void setGameBoard(GameBoard gameBoard) {
         this.gameBoard = gameBoard;
+        timer.reset();
+        mineCounter.reset();
         if (gameState != GameState.RUNNING) {
             setGameState(GameState.RUNNING);
         }
+        timer.start();
     }
 }
