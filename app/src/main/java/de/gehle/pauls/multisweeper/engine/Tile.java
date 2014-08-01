@@ -37,6 +37,8 @@ public class Tile {
     private int nrSurroundingFlags;
     private boolean numberUncovered;
 
+    private int playerLastClicked = 0;
+
     public Tile() {
         realState = TileState.NUMBER;
         shownState = TileState.COVERED;
@@ -116,18 +118,32 @@ public class Tile {
     public void setCovered() {
         if (isSwappable()) {
             shownState = TileState.COVERED;
+            playerLastClicked = 0;
         }
     }
 
-    public void setFlag() {
+    /**
+     * Sets a flag for the given player (Visualization of flag depends on playerId)
+     *
+     * @param playerId PlayerId for multiplayer. In Singleplayer we have the id = 0
+     */
+    public void setFlag(int playerId) {
         if (isSwappable()) {
             shownState = TileState.FLAG;
+            playerLastClicked = playerId;
         }
     }
 
-    public void setUnknown() {
+
+    /**
+     * Sets a question-mark for the given player (Visualization of question-mark depends on playerId)
+     *
+     * @param playerId PlayerId for multiplayer. In Singleplayer we have the id = 0
+     */
+    public void setUnknown(int playerId) {
         if (isSwappable()) {
             shownState = TileState.UNKNOWN;
+            playerLastClicked = playerId;
         }
     }
 
@@ -144,6 +160,10 @@ public class Tile {
 
     public boolean isMine() {
         return realState == TileState.MINE;
+    }
+
+    public int getPlayerId() {
+        return playerLastClicked;
     }
 
     /**

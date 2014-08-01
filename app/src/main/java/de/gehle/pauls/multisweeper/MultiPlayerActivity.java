@@ -10,6 +10,8 @@ import android.view.View;
 import com.google.android.gms.games.multiplayer.realtime.RealTimeMessage;
 import com.google.android.gms.games.multiplayer.realtime.Room;
 
+import java.util.ArrayList;
+
 import de.gehle.pauls.multisweeper.components.AbstractMultiPlayerActivity;
 import de.gehle.pauls.multisweeper.engine.Game;
 import de.gehle.pauls.multisweeper.engine.GameBoard;
@@ -17,6 +19,10 @@ import de.gehle.pauls.multisweeper.engine.GameBoard;
 public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
 
     private static final String TAG = "Multiplayer";
+
+    private boolean gameStarted = false;
+    private ArrayList<int[]> clickBuffer = new ArrayList<int[]>();
+    private ArrayList<int[]> longClickBuffer = new ArrayList<int[]>();
 
 
     @Override
@@ -91,7 +97,8 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
                         new View.OnLongClickListener() {
                             @Override
                             public boolean onLongClick(View view) {
-                                game.playerMoveAlt(curRow, curCol);
+                                int id = mParticipant2Id.get(mMyGoogleId);
+                                game.playerMoveAlt(id, curRow, curCol);
                                 sendLongClick(curRow, curCol);
                                 return true;
                             }
@@ -158,7 +165,6 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
 
         byte[] buf = realTimeMessage.getMessageData();
         //String sender = realTimeMessage.getSenderParticipantId();
-        Log.d(TAG, "Message received: " + (char) buf[0] + "/" + (int) buf[1]);
 
         char action = (char) buf[0];
 
@@ -166,19 +172,45 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
             byte[] gameBoardData = new byte[buf.length - 1];
             System.arraycopy(buf, 1, gameBoardData, 0, buf.length - 1);
             GameBoard syncGameBoard = GameBoard.fromJson(game, new String(gameBoardData));
+
+            gameStarted = true;
             game.setGameBoard(syncGameBoard);
+
+            if (!clickBuffer.isEmpty()) {
+                for (int[] click : clickBuffer) {
+                    game.playerMove(click[0], click[1], click[2]);
+                }
+                clickBuffer.clear();
+            }
+            if (!longClickBuffer.isEmpty()) {
+                for (int[] longClick : longClickBuffer) {
+                    game.playerMove(longClick[0], longClick[1], longClick[2]);
+                }
+                longClickBuffer.clear();
+            }
+
+            initButtons();
+            showGameState();
 
         } else {
             int row = (int) buf[1];
             int col = (int) buf[2];
+            int id = mParticipant2Id.get(realTimeMessage.getSenderParticipantId());
 
             if (action == 'C') {
                 Log.d(TAG, "Received onClick");
-                int id = mParticipant2Id.get(realTimeMessage.getSenderParticipantId());
-                game.playerMove(id, row, col);
+                if (gameStarted) {
+                    game.playerMove(id, row, col);
+                } else {
+                    clickBuffer.add(new int[]{id, row, col});
+                }
             } else if (action == 'L') {
                 Log.d(TAG, "Received onLongClick");
-                game.playerMoveAlt(row, col);
+                if (gameStarted) {
+                    game.playerMoveAlt(id, row, col);
+                } else {
+                    longClickBuffer.add(new int[]{id, row, col});
+                }
             }
         }
     }
@@ -195,7 +227,7 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
         /*
          * If gamestate switches to RUNNING the gameboard is initialised new
          */
-        if (gameState == Game.GameState.RUNNING) {
+        if (gameState == Game.GameState.RUNNING && !gameStarted) {
             Log.d(TAG, "Sending gameboard sync");
             byte[] gameBoardString = game.exportGameBoard();
 
@@ -204,6 +236,9 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
             System.arraycopy(gameBoardString, 0, message, 1, gameBoardString.length);
 
             broadcast(message);
+            gameStarted = true;
+        } else if (gameState == Game.GameState.GAME_WON || gameState == Game.GameState.GAME_LOST) {
+            gameStarted = false;
         }
     }
 }

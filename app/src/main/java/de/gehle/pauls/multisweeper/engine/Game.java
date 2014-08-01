@@ -47,10 +47,10 @@ public class Game {
      * <p/>
      * Initialises a playable field with timer and mine-counter
      *
-     * @param observer   An object, which will be notified in case of changes
-     * @param rows       Rows the gamefield should have
-     * @param cols       Cols the gamefield should have
-     * @param mines      Amount of mines placed on the gamefield
+     * @param observer An object, which will be notified in case of changes
+     * @param rows     Rows the gamefield should have
+     * @param cols     Cols the gamefield should have
+     * @param mines    Amount of mines placed on the gamefield
      */
     public Game(MinesweeperObserver observer, int rows, int cols, int mines, int nrOfPlayers) {
         this.observer = observer;
@@ -103,11 +103,12 @@ public class Game {
     /**
      * Called everytime a player does a long-click on a tileButton
      *
+     * @param playerId PlayerId for multiplayer. In Singleplayer we have the id = 0
      * @param row Row of the clicked tileButton
      * @param col Col of the clicked tileButton
      */
-    public void playerMoveAlt(int row, int col) {
-        Tile.TileState state = gameBoard.swapMarker(row, col);
+    public void playerMoveAlt(int playerId, int row, int col) {
+        Tile.TileState state = gameBoard.swapMarker(playerId, row, col);
         if (state == Tile.TileState.FLAG) {
             mineCounter.dec();
         } else if (state == Tile.TileState.UNKNOWN) {
@@ -286,7 +287,7 @@ public class Game {
 
     public void setGameBoard(GameBoard gameBoard) {
         this.gameBoard = gameBoard;
-        if(gameState == GameState.PREPARED) {
+        if (gameState != GameState.RUNNING) {
             setGameState(GameState.RUNNING);
         }
     }

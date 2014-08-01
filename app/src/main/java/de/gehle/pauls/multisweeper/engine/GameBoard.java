@@ -144,11 +144,12 @@ public class GameBoard {
      * <p/>
      * Swaps marker from COVERED -> FLAG -> QUESTION_MARK -> COVERED
      *
+     * @param playerId PlayerId for multiplayer. In Singleplayer we have the id = 0
      * @param row Row of the tile to swap
      * @param col Col of the tile to swap
      * @return New state of the tile
      */
-    public Tile.TileState swapMarker(int row, int col) {
+    public Tile.TileState swapMarker(int playerId, int row, int col) {
         Tile tile = getTile(row, col);
         Tile.TileState state = tile.getState();
 
@@ -157,10 +158,10 @@ public class GameBoard {
         }
 
         if (state == Tile.TileState.COVERED) {
-            tile.setFlag();
+            tile.setFlag(playerId);
             traversSurroundingTilesOf(row, col, Action.INC_SURROUNDING_FLAGS_COUNT);
         } else if (state == Tile.TileState.FLAG) {
-            tile.setUnknown();
+            tile.setUnknown(playerId);
             traversSurroundingTilesOf(row, col, Action.DEC_SURROUNDING_FLAGS_COUNT);
         } else {
             tile.setCovered();

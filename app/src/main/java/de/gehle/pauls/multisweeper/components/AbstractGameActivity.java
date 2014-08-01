@@ -115,6 +115,7 @@ public abstract class AbstractGameActivity extends BaseGameActivity implements M
      * Fills tableLayout with buttons and sets its click- and long-click-Listeners
      */
     protected void initButtons() {
+        mineField.removeAllViews();
         tileButtons = new TileButton[game.getRows()][game.getCols()];
         for (int i = 0; i < game.getRows(); ++i) {
             TableRow tableRow = new TableRow(this);
@@ -142,7 +143,7 @@ public abstract class AbstractGameActivity extends BaseGameActivity implements M
                         new View.OnLongClickListener() {
                             @Override
                             public boolean onLongClick(View view) {
-                                game.playerMoveAlt(curRow, curCol);
+                                game.playerMoveAlt(myId, curRow, curCol);
                                 return true;
                             }
                         }

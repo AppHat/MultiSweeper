@@ -202,7 +202,7 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
     public void onRealTimeMessageReceived(RealTimeMessage realTimeMessage) {
         byte[] buf = realTimeMessage.getMessageData();
         //String sender = realTimeMessage.getSenderParticipantId();
-        Log.d(TAG, "Message received: " + (char) buf[0] + "/" + (int) buf[1]);
+        Log.d(TAG, "Message received: " + (char) buf[0]);
 
         char action = (char) buf[0];
 
