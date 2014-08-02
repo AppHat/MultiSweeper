@@ -123,6 +123,9 @@ public class SinglePlayerActivity extends AbstractGameActivity {
 
         if (gameState == Game.GameState.GAME_WON) {
             Games.Achievements.increment(getApiClient(), getString(R.string.achievement_singleplayer_5_games_won), 1);
+            Games.Achievements.increment(getApiClient(), getString(R.string.achievement_singleplayer_10_games_won_in_row), 1);
+        } else if (gameState == Game.GameState.GAME_LOST) {
+            Games.Achievements.setSteps(getApiClient(), getString(R.string.achievement_singleplayer_10_games_won_in_row), 0);
         }
     }
 

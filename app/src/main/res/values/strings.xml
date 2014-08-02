@@ -34,4 +34,5 @@
     <string name="new_game">Try again</string>
     <string name="back">Back</string>
     <string name="achievement_button">Achievements</string>
+    <string name="action_logout">G+ Sign-out</string>
 </resources>

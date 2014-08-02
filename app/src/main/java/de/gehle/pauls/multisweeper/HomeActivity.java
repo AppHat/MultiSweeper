@@ -30,8 +30,9 @@ public class HomeActivity extends BaseGameActivity {
     private static final int REQUEST_ACHIEVEMENTS = 1;
     private static final String TAG = "HOME";
 
-    private boolean loggedIn = false;
     private Button continueButton;
+    private MenuItem logoutButton;
+    private MenuItem loginButton;
 
     public HomeActivity() {
         super(BaseGameActivity.CLIENT_GAMES | BaseGameActivity.CLIENT_SNAPSHOT);
@@ -43,7 +44,7 @@ public class HomeActivity extends BaseGameActivity {
         setContentView(R.layout.activity_home);
 
         continueButton = (Button) findViewById(R.id.continue_game_button);
-        if (loggedIn) {
+        if (isSignedIn()) {
             checkSaveGame(SinglePlayerActivity.DEFAULT_SAVE_GAME_NAME);
         }
 
@@ -58,6 +59,13 @@ public class HomeActivity extends BaseGameActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.home, menu);
+
+        logoutButton = menu.findItem(R.id.action_logout);
+        loginButton = menu.findItem(R.id.action_login);
+        if (isSignedIn() || true) {
+            showLogoutButton();
+        }
+
         return true;
     }
 
@@ -66,7 +74,13 @@ public class HomeActivity extends BaseGameActivity {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        //int id = item.getItemId();
+        int id = item.getItemId();
+        if (id == R.id.action_logout) {
+            signOut();
+            showLoginButton();
+        } else if (id == R.id.action_login) {
+            beginUserInitiatedSignIn();
+        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -143,18 +157,41 @@ public class HomeActivity extends BaseGameActivity {
 
     /**
      * ============================================================
+     * Login/ Logout button
+     * ============================================================
+     */
+
+    public void showLogoutButton() {
+        Log.d(TAG, "Showing logout button");
+        loginButton.setVisible(false);
+        logoutButton.setVisible(true);
+    }
+
+    public void showLoginButton() {
+        Log.d(TAG, "Showing login button");
+        logoutButton.setVisible(false);
+        loginButton.setVisible(true);
+    }
+
+
+    /**
+     * ============================================================
      * For GGS
      * ============================================================
      */
 
     @Override
     public void onSignInFailed() {
-
+        if (logoutButton != null) {
+            showLoginButton();
+        }
     }
 
     @Override
     public void onSignInSucceeded() {
-        loggedIn = true;
+        if (logoutButton != null) {
+            showLogoutButton();
+        }
         checkSaveGame(SinglePlayerActivity.DEFAULT_SAVE_GAME_NAME);
     }
 

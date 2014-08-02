@@ -3,7 +3,18 @@
     <string name="app_id">1063799807753</string>
     <string name="leaderboard_singleplayer">CgkIib6j-_oeEAIQAQ</string>
 
+    <!-- BOOM! -->
     <string name="achievement_first_lost">CgkIib6j-_oeEAIQCA</string>
+    <!-- Who is Jack? -->
     <string name="achievement_rules">CgkIib6j-_oeEAIQCg</string>
+    <!-- Cleaner -->
     <string name="achievement_singleplayer_5_games_won">CgkIib6j-_oeEAIQAw</string>
+    <!-- Advanced cleaner -->
+    <string name="achievement_singleplayer_10_games_won_in_row">CgkIib6j-_oeEAIQBQ</string>
+    <!-- King of sweeping -->
+    <string name="achievement_singleplayer_place_1">CgkIib6j-_oeEAIQAg</string>
+    <!-- Be strong together! -->
+    <string name="achievement_multiplayer_1_games_won">CgkIib6j-_oeEAIQBA</string>
+    <!-- Be a part of something -->
+    <string name="achievement_multiplayer_10_games_won">CgkIib6j-_oeEAIQCQ</string>
 </resources>

@@ -1,3 +1,17 @@
-<menu xmlns:tools="http://schemas.android.com/tools"
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     tools:context=".HomeActivity">
+    <item
+        android:id="@+id/action_logout"
+        android:icon="@drawable/ic_play_games_badge_green"
+        android:orderInCategory="100"
+        android:showAsAction="always"
+        android:title="@string/action_logout"
+        android:visible="false" />
+    <item
+        android:id="@+id/action_login"
+        android:icon="@drawable/ic_play_games_badge_white"
+        android:orderInCategory="100"
+        android:showAsAction="always"
+        android:title="@string/action_logout" />
 </menu>
