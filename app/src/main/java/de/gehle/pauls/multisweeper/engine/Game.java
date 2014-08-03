@@ -35,9 +35,9 @@ public class Game {
 
     private GameState gameState;
 
-    /**
-     * Game constructor for Minesweeper
-     */
+//    /**
+//     * Game constructor for Minesweeper
+//     */
 //    public Game(MinesweeperObserver observer, int rows, int cols, int mines) {
 //        this(observer, rows, cols, mines, 1);
 //    }

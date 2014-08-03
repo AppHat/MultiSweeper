@@ -63,7 +63,7 @@ public abstract class AbstractGameActivity extends BaseGameActivity implements M
 
         TypedArray difficulties = getResources().obtainTypedArray(R.array.difficulties);
         int length = difficulties.length() - 1;
-        int maxDifficulty = length > 0 ? length - 1 : 0;
+        int maxDifficulty = length > 0 ? length : 0;
 
         if (difficultyIndex < minDifficulty || difficultyIndex > maxDifficulty) {
             Log.e(TAG, "Invalid difficulty");
