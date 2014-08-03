@@ -38,9 +38,9 @@ public class Game {
     /**
      * Game constructor for Minesweeper
      */
-    public Game(MinesweeperObserver observer, int rows, int cols, int mines) {
-        this(observer, rows, cols, mines, 1);
-    }
+//    public Game(MinesweeperObserver observer, int rows, int cols, int mines) {
+//        this(observer, rows, cols, mines, 1);
+//    }
 
     /**
      * Game constructor for Minesweeper
@@ -98,14 +98,20 @@ public class Game {
          */
         int uncovered = gameBoard.uncover(row, col);
         score.inc(playerId, uncovered);
+
+        if (gameBoard.hitMine()) {
+            endGame(GameState.GAME_LOST);
+        } else if (gameBoard.allUncovered()) {
+            endGame(GameState.GAME_WON);
+        }
     }
 
     /**
      * Called everytime a player does a long-click on a tileButton
      *
      * @param playerId PlayerId for multiplayer. In Singleplayer we have the id = 0
-     * @param row Row of the clicked tileButton
-     * @param col Col of the clicked tileButton
+     * @param row      Row of the clicked tileButton
+     * @param col      Col of the clicked tileButton
      */
     public void playerMoveAlt(int playerId, int row, int col) {
         Log.d(TAG, "LongClicked player: " + playerId);

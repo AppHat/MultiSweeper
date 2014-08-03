@@ -23,6 +23,7 @@ public class GameBoard {
     private Tile[][] tiles;
 
     private int nrOfCoveredFields;
+    private boolean hitMine;
 
     /**
      * Action for travers surrounding tiles
@@ -49,6 +50,7 @@ public class GameBoard {
     }
 
     public void reset() {
+        hitMine = false;
         nrOfCoveredFields = rows * cols - mines;
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
@@ -125,15 +127,11 @@ public class GameBoard {
 
 
         if (state == Tile.TileState.EXPLODED_MINE) {
-            game.endGame(Game.GameState.GAME_LOST);
+            hitMine = true;
         }
         //If the tile has no surrounding mines, open surrounding tiles
         else if (tiles[row][col].isEmpty()) {
             traversSurroundingTilesOf(row, col, Action.UNCOVER);
-        }
-
-        if (nrOfCoveredFields == 0) {
-            game.endGame(Game.GameState.GAME_WON);
         }
 
         return oldNrOfCoveredFields - nrOfCoveredFields;
@@ -145,8 +143,8 @@ public class GameBoard {
      * Swaps marker from COVERED -> FLAG -> QUESTION_MARK -> COVERED
      *
      * @param playerId PlayerId for multiplayer. In Singleplayer we have the id = 0
-     * @param row Row of the tile to swap
-     * @param col Col of the tile to swap
+     * @param row      Row of the tile to swap
+     * @param col      Col of the tile to swap
      * @return New state of the tile
      */
     public Tile.TileState swapMarker(int playerId, int row, int col) {
@@ -169,6 +167,14 @@ public class GameBoard {
 
         game.onTileStateChanged(row, col);
         return tile.getState();
+    }
+
+    public boolean hitMine() {
+        return hitMine;
+    }
+
+    public boolean allUncovered() {
+        return nrOfCoveredFields == 0;
     }
 
     /**

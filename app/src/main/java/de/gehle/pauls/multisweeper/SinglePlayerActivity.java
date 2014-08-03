@@ -1,15 +1,19 @@
 package de.gehle.pauls.multisweeper;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TableLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.games.Games;
@@ -119,14 +123,43 @@ public class SinglePlayerActivity extends AbstractGameActivity {
 
     @Override
     public void onGameStateChanged(Game.GameState gameState) {
-        super.onGameStateChanged(gameState);
-
-        if (gameState == Game.GameState.GAME_WON) {
-            Games.Achievements.increment(getApiClient(), getString(R.string.achievement_singleplayer_5_games_won), 1);
-            Games.Achievements.increment(getApiClient(), getString(R.string.achievement_singleplayer_10_games_won_in_row), 1);
-        } else if (gameState == Game.GameState.GAME_LOST) {
-            Games.Achievements.setSteps(getApiClient(), getString(R.string.achievement_singleplayer_10_games_won_in_row), 0);
+        if (gameState != Game.GameState.GAME_WON && gameState != Game.GameState.GAME_LOST) {
+            return;
         }
+        Log.d(TAG, "Game finished");
+
+
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+
+        int score = game.getScore(myId);
+        boolean myTurn = game.getCurrentPlayer() == myId;
+        boolean won = myTurn == (gameState == Game.GameState.GAME_WON);
+        if (won) {
+            dialogBuilder.setTitle(R.string.gamestate_won);
+            Games.Leaderboards.submitScore(getApiClient(), getString(R.string.leaderboard_singleplayer), score);
+            Log.d("Score", "Score saved");
+        } else {
+            dialogBuilder.setTitle(R.string.gamestate_lost);
+        }
+
+        AlertDialog dialog = dialogBuilder.setMessage("Score: " + score + " Points")
+                .setPositiveButton(R.string.new_game, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        resetGame(1);
+                    }
+                })
+                .setNegativeButton(R.string.back, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        //Stop the activity
+                        SinglePlayerActivity.this.finish();
+                    }
+                })
+                .create();
+        dialog.show();
+        TextView messageText = (TextView) dialog.findViewById(android.R.id.message);
+        messageText.setGravity(Gravity.CENTER);
     }
 
 

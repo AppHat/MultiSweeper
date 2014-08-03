@@ -1,10 +1,14 @@
 package de.gehle.pauls.multisweeper.components;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.WindowManager;
+import android.widget.TextView;
 
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.GamesActivityResultCodes;
@@ -23,6 +27,9 @@ import com.google.android.gms.games.multiplayer.realtime.RoomUpdateListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import de.gehle.pauls.multisweeper.R;
+import de.gehle.pauls.multisweeper.engine.Game;
 
 /**
  * Implements a general functionality of handling connection errors, storing playerId, fetching roomIds, etc.
@@ -504,5 +511,48 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
                 mParticipant2Id.put(p.getParticipantId(), id++);
             }
         }
+    }
+
+    @Override
+    public void onGameStateChanged(Game.GameState gameState) {
+
+        if (gameState != Game.GameState.GAME_WON && gameState != Game.GameState.GAME_LOST) {
+            return;
+        }
+        Log.d(TAG, "Game finished");
+
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+
+        // this is temporary
+        // TODO make a finished-game-scoreboard
+        int place = game.getPlace(myId);
+        int score = game.getScore(myId);
+        if (place == 1) {
+            dialogBuilder.setTitle(R.string.gamestate_won);
+            Games.Leaderboards.submitScore(getApiClient(), getString(R.string.leaderboard_singleplayer), score);
+            Log.d("Score", "Score saved");
+        } else {
+            dialogBuilder.setTitle(R.string.gamestate_lost);
+        }
+
+        AlertDialog dialog = dialogBuilder.setMessage("Score: " + score + " Points")
+                .setPositiveButton(R.string.new_game, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        resetGame(game.getNrOfPlayers());
+
+                    }
+                })
+                .setNegativeButton(R.string.back, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        //Stop the activity
+                        AbstractMultiPlayerActivity.this.finish();
+                    }
+                })
+                .create();
+        dialog.show();
+        TextView messageText = (TextView) dialog.findViewById(android.R.id.message);
+        messageText.setGravity(Gravity.CENTER);
     }
 }

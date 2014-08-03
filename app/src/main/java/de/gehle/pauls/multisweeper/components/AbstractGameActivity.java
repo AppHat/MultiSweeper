@@ -1,18 +1,14 @@
 package de.gehle.pauls.multisweeper.components;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
-import com.google.android.gms.games.Games;
 import com.google.example.games.basegameutils.BaseGameActivity;
 
 import java.util.Arrays;
@@ -253,46 +249,6 @@ public abstract class AbstractGameActivity extends BaseGameActivity implements M
 
     @Override
     public void onGameStateChanged(Game.GameState gameState) {
-        if (gameState != Game.GameState.GAME_WON && gameState != Game.GameState.GAME_LOST) {
-            return;
-        }
-        Log.d("GameActivity", "Game finished");
 
-        if (gameState == Game.GameState.GAME_LOST) {
-            Games.Achievements.unlock(getApiClient(), getString(R.string.achievement_first_lost));
-        }
-
-
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-
-        int score = game.getScore(myId);
-        boolean myTurn = game.getCurrentPlayer() == myId;
-        boolean won = myTurn == (gameState == Game.GameState.GAME_WON);
-        if (won) {
-            dialogBuilder.setTitle(R.string.gamestate_won);
-            Games.Leaderboards.submitScore(getApiClient(), getString(R.string.leaderboard_singleplayer), score);
-            Log.d("Score", "Score saved");
-        } else {
-            dialogBuilder.setTitle(R.string.gamestate_lost);
-        }
-
-        AlertDialog dialog = dialogBuilder.setMessage("Score: " + score + " Points")
-                .setPositiveButton(R.string.new_game, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int id) {
-                        resetGame(game.getNrOfPlayers());
-                    }
-                })
-                .setNegativeButton(R.string.back, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int id) {
-                        //Stop the activity
-                        AbstractGameActivity.this.finish();
-                    }
-                })
-                .create();
-        dialog.show();
-        TextView messageText = (TextView) dialog.findViewById(android.R.id.message);
-        messageText.setGravity(Gravity.CENTER);
     }
 }
