@@ -69,6 +69,10 @@ class Score {
         for (int i = 0; i < nrOfPlayers; ++i) {
             if (score[i] > score[playerId]) {
                 ++place;
+            } else if (score[i] == score[playerId] && i != playerId) {
+                if (playerId < i) {
+                    ++place;
+                }
             }
         }
         return place;

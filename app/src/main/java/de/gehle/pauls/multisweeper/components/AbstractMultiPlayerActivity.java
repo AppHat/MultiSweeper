@@ -6,9 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.WindowManager;
-import android.widget.TextView;
 
 import com.google.android.gms.games.Games;
 import com.google.android.gms.games.GamesActivityResultCodes;
@@ -513,6 +511,13 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
         }
     }
 
+
+    static public class Placement {
+        public String player;
+        public int score;
+        public int place;
+    }
+
     @Override
     public void onGameStateChanged(Game.GameState gameState) {
 
@@ -521,26 +526,29 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
         }
         Log.d(TAG, "Game finished");
 
-        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-
-        // this is temporary
-        // TODO make a finished-game-scoreboard
-        int place = game.getPlace(myId);
-        int score = game.getScore(myId);
-        if (place == 1) {
-            dialogBuilder.setTitle(R.string.gamestate_won);
-            Games.Leaderboards.submitScore(getApiClient(), getString(R.string.leaderboard_singleplayer), score);
-            Log.d("Score", "Score saved");
-        } else {
-            dialogBuilder.setTitle(R.string.gamestate_lost);
+        Placement[] placements = new Placement[mParticipants.size()];
+        for (Participant p : mParticipants) {
+            Placement placement = new Placement();
+            placement.player = p.getDisplayName();
+            placement.place = game.getPlace(mParticipant2Id.get(p.getParticipantId()));
+            placement.score = game.getScore(mParticipant2Id.get(p.getParticipantId()));
+            placements[placement.place - 1] = placement;
         }
 
-        AlertDialog dialog = dialogBuilder.setMessage("Score: " + score + " Points")
+        PlacementBoardAdapter adapter = new PlacementBoardAdapter(this,
+                R.layout.placement, placements);
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setTitle("Game over");
+        dialogBuilder.setAdapter(adapter, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int item) {
+            }
+        });
+
+        AlertDialog dialog = dialogBuilder
                 .setPositiveButton(R.string.new_game, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
                         resetGame(game.getNrOfPlayers());
-
                     }
                 })
                 .setNegativeButton(R.string.back, new DialogInterface.OnClickListener() {
@@ -552,7 +560,5 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
                 })
                 .create();
         dialog.show();
-        TextView messageText = (TextView) dialog.findViewById(android.R.id.message);
-        messageText.setGravity(Gravity.CENTER);
     }
 }

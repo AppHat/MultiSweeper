@@ -132,9 +132,7 @@ public class SinglePlayerActivity extends AbstractGameActivity {
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
 
         int score = game.getScore(myId);
-        boolean myTurn = game.getCurrentPlayer() == myId;
-        boolean won = myTurn == (gameState == Game.GameState.GAME_WON);
-        if (won) {
+        if (gameState == Game.GameState.GAME_WON) {
             dialogBuilder.setTitle(R.string.gamestate_won);
             Games.Leaderboards.submitScore(getApiClient(), getString(R.string.leaderboard_singleplayer), score);
             Log.d("Score", "Score saved");
