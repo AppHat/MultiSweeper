@@ -8,8 +8,8 @@ android {
         applicationId "de.gehle.pauls.multisweeper"
         minSdkVersion 15
         targetSdkVersion 19
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "1.0-alpha"
     }
     buildTypes {
         release {
@@ -22,5 +22,6 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile project(':libraries:BaseGameUtils')
-    compile 'com.google.android.gms:play-services:+'
+    //compile 'com.google.android.gms:play-services:+'
+    compile 'com.google.android.gms:play-services:5.0.89'
 }

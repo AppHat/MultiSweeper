@@ -62,7 +62,7 @@ public class HomeActivity extends BaseGameActivity {
 
         logoutButton = menu.findItem(R.id.action_logout);
         loginButton = menu.findItem(R.id.action_login);
-        if (isSignedIn() || true) {
+        if (isSignedIn()) {
             showLogoutButton();
         }
 
