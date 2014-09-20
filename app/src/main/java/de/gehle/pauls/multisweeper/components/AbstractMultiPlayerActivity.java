@@ -58,6 +58,8 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
     protected HashMap<String, Integer> mParticipant2Id = null;
     protected String mMyGoogleId = null;
 
+    protected String hostParticipantId = null;
+
 
     /**
      * Create a RoomConfigBuilder that's appropriate for your implementation
@@ -488,11 +490,26 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
             onParticipantsUpdated();
         } else {
             mRoomId = null;
+            onParticipantsUpdated();
         }
         /*
         if (mParticipants != null) {
             updatePeerScoresDisplay();
         }*/
+    }
+
+    private void onHostParticipantIdUpdate() {
+        if (mParticipants.size() > 0) {
+            /**
+             * TODO: Better strategy
+             * Let first participant choose a random host and broadcast the result to the others.
+             */
+            hostParticipantId = mParticipants.get(0).getParticipantId();
+        } else {
+            hostParticipantId = null;
+        }
+        Log.d(TAG, "MyId is " + mMyGoogleId);
+        Log.d(TAG, "HostId is " + hostParticipantId);
     }
 
     private void onParticipantsUpdated() {
@@ -509,13 +526,7 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
                 mParticipant2Id.put(p.getParticipantId(), id++);
             }
         }
-    }
-
-
-    static public class Placement {
-        public String player;
-        public int score;
-        public int place;
+        onHostParticipantIdUpdate();
     }
 
     @Override
@@ -560,5 +571,11 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
                 })
                 .create();
         dialog.show();
+    }
+
+    static public class Placement {
+        public String player;
+        public int score;
+        public int place;
     }
 }

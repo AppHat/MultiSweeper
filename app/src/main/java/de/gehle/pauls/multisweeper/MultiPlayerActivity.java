@@ -89,7 +89,9 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
                             public void onClick(View view) {
                                 int id = mParticipant2Id.get(mMyGoogleId);
                                 Log.d(TAG, "My id: " + id);
-                                game.playerMove(id, curRow, curCol);
+                                if (hostParticipantId.equals(mMyGoogleId)) {
+                                    game.playerMove(id, curRow, curCol);
+                                }
                                 sendOnClick(curRow, curCol);
                             }
                         }
@@ -99,7 +101,9 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
                             @Override
                             public boolean onLongClick(View view) {
                                 int id = mParticipant2Id.get(mMyGoogleId);
-                                game.playerMoveAlt(id, curRow, curCol);
+                                if (hostParticipantId.equals(mMyGoogleId)) {
+                                    game.playerMoveAlt(id, curRow, curCol);
+                                }
                                 sendLongClick(curRow, curCol);
                                 return true;
                             }
@@ -135,7 +139,11 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
         message[1] = (byte) row;
         message[2] = (byte) col;
 
-        broadcast(message);
+        if (hostParticipantId.equals(mMyGoogleId)) {
+            broadcast(message);
+        } else {
+            sendMessage(hostParticipantId, message);
+        }
         Log.d(TAG, "Sending onClick with " + row + "," + col);
     }
 
@@ -146,7 +154,11 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
         message[1] = (byte) row;
         message[2] = (byte) col;
 
-        broadcast(message);
+        if (hostParticipantId.equals(mMyGoogleId)) {
+            broadcast(message);
+        } else {
+            sendMessage(hostParticipantId, message);
+        }
         Log.d(TAG, "Sending onLongClick with " + row + "," + col);
     }
 
@@ -200,7 +212,7 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
 
             if (action == 'C') {
                 Log.d(TAG, "Received onClick");
-                if (gameStarted) {
+                if (gameStarted || hostParticipantId.equals(mMyGoogleId)) {
                     game.playerMove(id, row, col);
                 } else {
                     clickBuffer.add(new int[]{id, row, col});
@@ -212,6 +224,11 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
                 } else {
                     longClickBuffer.add(new int[]{id, row, col});
                 }
+            }
+
+            //Forwarding messages as host
+            if (hostParticipantId.equals(mMyGoogleId)) {
+                broadcast(buf);
             }
         }
     }
@@ -236,7 +253,10 @@ public class MultiPlayerActivity extends AbstractMultiPlayerActivity {
             message[0] = 'B';
             System.arraycopy(gameBoardString, 0, message, 1, gameBoardString.length);
 
-            broadcast(message);
+            //Forwarding messages as host
+            if (hostParticipantId.equals(mMyGoogleId)) {
+                broadcast(message);
+            }
             gameStarted = true;
         } else if (gameState == Game.GameState.GAME_WON || gameState == Game.GameState.GAME_LOST) {
             gameStarted = false;
