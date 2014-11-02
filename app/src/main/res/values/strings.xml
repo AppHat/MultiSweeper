@@ -8,7 +8,7 @@
     <string name="singleplayer_button">Singleplayer</string>
     <string name="multiplayer_button">Multiplayer</string>
     <string name="continue_game">Continue</string>
-    <string name="high_scores">Leaderboard</string>
+    <string name="high_scores">Leaderboards</string>
     <string name="rules">Rules</string>
     <string name="exit">Exit</string>
     <string name="title_activity_single_player">SingleSweeper</string>
@@ -35,4 +35,5 @@
     <string name="back">Back</string>
     <string name="achievement_button">Achievements</string>
     <string name="action_logout">G+ Sign-out</string>
+    <string name="app_title">"Hello\nSweeper"</string>
 </resources>

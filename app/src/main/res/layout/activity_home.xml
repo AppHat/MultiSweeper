@@ -9,56 +9,90 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".HomeActivity"
-    android:weightSum="1">
+    android:weightSum="1"
+    android:background="#669900">
 
-<Button
-        android:id="@+id/singleplayer_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="startGame"
-        android:text="@string/singleplayer_button" />
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="160dp"
+        android:text="@string/app_title"
+        android:id="@+id/textView"
+        android:layout_gravity="center_horizontal"
+        android:textColor="#c5e26d"
+        android:textSize="45sp" />
 
-    <Button
-        android:id="@+id/continue_game_button"
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="continueGame"
-        android:text="@string/continue_game"
-        android:enabled="false" />
+        android:layout_height="wrap_content">
 
-    <Button
-        android:id="@+id/multiplayer_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="multiplayer"
-        android:text="@string/multiplayer_button" />
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+
+            <Button
+                android:id="@+id/singleplayer_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="startGame"
+                android:text="@string/singleplayer_button"
+                style="@style/Button.Default" />
+
+            <Button
+                android:id="@+id/continue_game_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="continueGame"
+                android:text="@string/continue_game"
+                android:enabled="false"
+                style="@style/Button.Default" />
+
+            </LinearLayout>
+
+        <Button
+            android:id="@+id/multiplayer_button"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:onClick="multiplayer"
+            android:text="@string/multiplayer_button"
+            style="@style/Button.Default"
+            android:layout_weight="1" />
+
+    </LinearLayout>
 
     <Button
         android:id="@+id/high_scores_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="leaderboard"
-        android:text="@string/high_scores" />
+        android:text="@string/high_scores"
+        style="@style/Button.Default" />
 
     <Button
         android:id="@+id/achievement_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="achievements"
-        android:text="@string/achievement_button" />
+        android:text="@string/achievement_button"
+        style="@style/Button.Default" />
 
     <Button
         android:id="@+id/rules_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="rules"
-        android:text="@string/rules" />
+        android:text="@string/rules"
+        style="@style/Button.Default" />
 
+    <!--
     <Button
         android:id="@+id/exit_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="exit"
-        android:text="@string/exit" />
-
+        android:text="@string/exit"
+        style="@style/Button.Default" />
+    -->
 </LinearLayout>

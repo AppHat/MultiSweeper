@@ -498,20 +498,6 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
         }*/
     }
 
-    private void onHostParticipantIdUpdate() {
-        if (mParticipants.size() > 0) {
-            /**
-             * TODO: Better strategy
-             * Let first participant choose a random host and broadcast the result to the others.
-             */
-            hostParticipantId = mParticipants.get(0).getParticipantId();
-        } else {
-            hostParticipantId = null;
-        }
-        Log.d(TAG, "MyId is " + mMyGoogleId);
-        Log.d(TAG, "HostId is " + hostParticipantId);
-    }
-
     private void onParticipantsUpdated() {
         if (mParticipant2Id == null) {
             mParticipant2Id = new HashMap<String, Integer>(mParticipants.size());
@@ -527,6 +513,20 @@ public abstract class AbstractMultiPlayerActivity extends AbstractGameActivity i
             }
         }
         onHostParticipantIdUpdate();
+    }
+
+    private void onHostParticipantIdUpdate() {
+        if (mParticipants.size() > 0) {
+            /**
+             * TODO: Better strategy
+             * Let first participant choose a random host and broadcast the result to the others.
+             */
+            hostParticipantId = mParticipants.get(0).getParticipantId();
+        } else {
+            hostParticipantId = null;
+        }
+        Log.d(TAG, "MyId is " + mMyGoogleId);
+        Log.d(TAG, "HostId is " + hostParticipantId);
     }
 
     @Override
